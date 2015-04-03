@@ -1,5 +1,12 @@
 # Logs
 logs
+/nbproject
+node_modules/
+*results.txt
+docs/
+out/
+tags
+*.tgz
 *.log
 
 # Runtime data
