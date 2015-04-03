@@ -1,5 +1,7 @@
 ﻿'use strict';
 
+var config = require('../../config');
+
 /*
  * Code samples from:
  * http://docs.basho.com/riak/latest/dev/taste-of-riak/nodejs/
@@ -11,17 +13,7 @@ var logger = require('winston');
 var Riak = require('basho-riak-client');
 
 function TasteOfRiakIntroduction() {
-    var client = new Riak.Client([
-        // Note: this is for a connection to a devrel running on
-        // host 'riak-test'. You may wish to use this instead:
-        // 'localhost:8087'
-        'riak-test:10017',
-        // Can comment out the following nodes if only using
-        // a one-node cluster
-        'riak-test:10027',
-        'riak-test:10037',
-        'riak-test:10047'
-    ]);
+    var client = config.createClient();
 
     client.ping(function (err, rslt) {
         if (err) {
