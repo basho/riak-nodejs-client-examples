@@ -8,11 +8,16 @@
  */
 
 var TasteOfRiakIntroduction = require('./dev/taste-of-riak/introduction');
+
 var DevUsingBasics = require('./dev/using/basics');
 var DevUsingUpdates = require('./dev/using/updates');
+
+var DevAdvancedBucketTypes = require('./dev/advanced/bucket-types');
 
 TasteOfRiakIntroduction();
 
 DevUsingBasics();
 
 DevUsingUpdates();
+
+DevAdvancedBucketTypes();
