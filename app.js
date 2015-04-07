@@ -9,7 +9,10 @@
 
 var TasteOfRiakIntroduction = require('./dev/taste-of-riak/introduction');
 var DevUsingBasics = require('./dev/using/basics');
+var DevUsingUpdates = require('./dev/using/updates');
 
 TasteOfRiakIntroduction();
 
 DevUsingBasics();
+
+DevUsingUpdates();
