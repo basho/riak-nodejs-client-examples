@@ -13,6 +13,7 @@ var DevUsingBasics = require('./dev/using/basics');
 var DevUsingUpdates = require('./dev/using/updates');
 var DevUsing2i = require('./dev/using/2i');
 var DevUsingConflictResolution = require('./dev/using/conflict-resolution');
+var DevUsingDataTypes = require('./dev/using/data-types');
 
 var DevAdvancedBucketTypes = require('./dev/advanced/bucket-types');
 
@@ -22,5 +23,6 @@ DevUsingBasics();
 DevUsingUpdates();
 DevUsing2i();
 DevUsingConflictResolution();
+DevUsingDataTypes();
 
 DevAdvancedBucketTypes();
