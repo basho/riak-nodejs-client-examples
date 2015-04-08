@@ -12,6 +12,7 @@ var TasteOfRiakIntroduction = require('./dev/taste-of-riak/introduction');
 var DevUsingBasics = require('./dev/using/basics');
 var DevUsingUpdates = require('./dev/using/updates');
 var DevUsing2i = require('./dev/using/2i');
+var DevUsingConflictResolution = require('./dev/using/conflict-resolution');
 
 var DevAdvancedBucketTypes = require('./dev/advanced/bucket-types');
 
@@ -20,5 +21,6 @@ TasteOfRiakIntroduction();
 DevUsingBasics();
 DevUsingUpdates();
 DevUsing2i();
+DevUsingConflictResolution();
 
 DevAdvancedBucketTypes();
