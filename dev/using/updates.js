@@ -27,7 +27,7 @@ function DevUsingUpdates() {
             if (err) {
                 throw new Error(err);
             } else {
-                logger.info('Stored Pete Carroll');
+                logger.info('[DevUsingUpdates] Stored Pete Carroll');
             }
             update_coach('seahawks', 'Bob Barker');
         });

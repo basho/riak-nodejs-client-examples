@@ -41,7 +41,7 @@ function DevAdvancedBucketTypes() {
                 }
                 var obj2 = rslt.values.shift();
                 assert(obj1.value == obj2.value);
-                logger.info("obj1 val: '%s', obj2 val: '%s'",
+                logger.info("[DevAdvancedBucketTypes] obj1 val: '%s', obj2 val: '%s'",
                     obj1.value.toString('utf8'), obj2.value.toString('utf8'));
             });
         });

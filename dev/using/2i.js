@@ -31,7 +31,7 @@ function DevUsing2i() {
                 throw new Error(err);
             }
 
-            logger.info('Stored john_smith with index data');
+            logger.info('[DevUsing2i] Stored john_smith with index data');
             querying_indexes();
         });
     }
@@ -152,13 +152,13 @@ function DevUsing2i() {
         var query_keys = [];
         function pagination_cb(err, rslt) {
             if (err) {
-                logger.error("query_cb err: '%s'", err);
+                logger.error("[DevUsing2i] query_cb err: '%s'", err);
                 return;
             }
 
             if (rslt.done) {
                 query_keys.forEach(function (key) {
-                    logger.info("2i query key: '%s'", key);
+                    logger.info("[DevUsing2i] 2i query key: '%s'", key);
                 });
                 query_keys = [];
 
@@ -250,23 +250,23 @@ function DevUsing2i() {
         riakObj.addToIndex('field2_int', 'bar');
         try {
             client.storeValue({ value: riakObj }, function (err, rslt) {
-                logger.error("incorrect_data_type err: '%s'", err);
+                logger.error("[DevUsing2i] incorrect_data_type err: '%s'", err);
             });
         } catch (e) {
-            logger.error("incorrect_data_type err: '%s'", e);
+            logger.error("[DevUsing2i] incorrect_data_type err: '%s'", e);
         }
     }
 
     var query_keys = [];
     function query_cb(err, rslt) {
         if (err) {
-            logger.error("query_cb err: '%s'", err);
+            logger.error("[DevUsing2i] query_cb err: '%s'", err);
             return;
         }
 
         if (rslt.done) {
             query_keys.forEach(function (key) {
-                logger.info("2i query key: '%s'", key);
+                logger.info("[DevUsing2i] 2i query key: '%s'", key);
             });
             query_keys = [];
         }

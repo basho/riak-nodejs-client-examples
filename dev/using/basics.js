@@ -67,12 +67,12 @@ function DevUsingBasics() {
                 throw new Error(err);
             }
             if (rslt.isNotFound) {
-                logger.info("read_rufus: isNotFound %s", rslt.isNotFound);
+                logger.info("[DevUsingBasics] read_rufus: isNotFound %s", rslt.isNotFound);
                 put_rufus();
             } else {
                 var riakObj = rslt.values.shift();
                 var rufusValue = riakObj.value.toString("utf8");
-                logger.info("read_rufus: %s", rufusValue);
+                logger.info("[DevUsingBasics] read_rufus: %s", rufusValue);
             }
         });
     }
@@ -96,7 +96,7 @@ function DevUsingBasics() {
                     throw new Error(err);
                 }
                 var fetchedObj = rslt.values.shift();
-                logger.info("vclock: %s", fetchedObj.getVClock().toString('base64'));
+                logger.info("[DevUsingBasics] vclock: %s", fetchedObj.getVClock().toString('base64'));
                 fetchedObj.setValue('Harlem Globetrotters');
                 options.value = fetchedObj;
                 options.returnBody = true;
@@ -105,7 +105,7 @@ function DevUsingBasics() {
                         throw new Error(err);
                     }
                     var updatedObj = rslt.values.shift();
-                    logger.info("champion: %s", updatedObj.value.toString('utf8'));
+                    logger.info("[DevUsingBasics] champion: %s", updatedObj.value.toString('utf8'));
                 });
             });
         });
@@ -126,7 +126,7 @@ function DevUsingBasics() {
             }
             var riakObj = rslt.values.shift();
             var viper = riakObj.value;
-            logger.info("dodge viper: %s", viper.toString('utf8'));
+            logger.info("[DevUsingBasics] dodge viper: %s", viper.toString('utf8'));
         });
     }
 
@@ -144,7 +144,7 @@ function DevUsingBasics() {
             }
             var riakObj = rslt.values.shift();
             var generatedKey = riakObj.getKey();
-            logger.info("Generated key: %s", generatedKey);
+            logger.info("[DevUsingBasics] Generated key: %s", generatedKey);
 
             options = {
                 bucketType: 'users', bucket: 'random_user_keys',
@@ -165,7 +165,7 @@ function DevUsingBasics() {
             if (err) {
                 throw new Error(err);
             }
-            logger.info("props: %s", JSON.stringify(rslt));
+            logger.info("[DevUsingBasics] props: %s", JSON.stringify(rslt));
         });
     }
 }

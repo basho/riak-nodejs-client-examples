@@ -64,7 +64,7 @@ function DevUsingConflictResolution() {
             if (err) {
                 throw new Error(err);
             }
-            logger.info("%s/best_character has '%d' siblings",
+            logger.info("[DevUsingConflictRes] %s/best_character has '%d' siblings",
                 bucket_name, rslt.values.length);
 
             resolve_siblings(bucket_name);

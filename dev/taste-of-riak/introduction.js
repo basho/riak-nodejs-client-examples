@@ -21,7 +21,7 @@ function TasteOfRiakIntroduction() {
         } else {
             // On success, ping returns true
             assert(rslt === true);
-            logger.info('ping is successful');
+            logger.info('[TasteOfRiakIntro] ping is successful');
             save_people();
         }
     });
@@ -60,7 +60,7 @@ function TasteOfRiakIntroduction() {
             if (err) {
                 throw new Error(err);
             } else {
-                logger.info('people stored in Riak');
+                logger.info('[TasteOfRiakIntro] people stored in Riak');
                 read_person();
             }
         });
@@ -74,7 +74,7 @@ function TasteOfRiakIntroduction() {
                 } else {
                     var riakObj = rslt.values.shift();
                     var bashoman = riakObj.value;
-                    logger.info("I found %s in 'contributors'", bashoman.emailAddress);
+                    logger.info("[TasteOfRiakIntro] I found %s in 'contributors'", bashoman.emailAddress);
 
                     update_person(riakObj);
                 }
@@ -92,7 +92,7 @@ function TasteOfRiakIntroduction() {
                 throw new Error(err);
             } else {
                 var updated = rslt.values.shift().value;
-                logger.info("updated bashoman first name: %s", updated.firstName);
+                logger.info("[TasteOfRiakIntro] updated bashoman first name: %s", updated.firstName);
                 delete_example();
             }
         });
@@ -103,7 +103,7 @@ function TasteOfRiakIntroduction() {
             if (err) {
                 throw new Error(err);
             } else {
-                logger.info('john doe deleted from Riak');
+                logger.info('[TasteOfRiakIntro] john doe deleted from Riak');
                 client_shutdown();
             }
         });

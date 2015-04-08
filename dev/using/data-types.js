@@ -15,13 +15,29 @@ var Riak = require('basho-riak-client');
 function DevUsingDataTypes() {
     var client = config.createClient();
 
-    var default_options = {
+    var counter_options = {
         bucketType: 'counters',
         bucket: 'counter',
         key: 'traffic_tickets'
     };
 
-    create_or_update_counter(default_options, 1, function(opt1) {
+    var set_options = {
+        bucketType: 'sets',
+        bucket: 'travel',
+        key: 'cities'
+    };
+
+    client.fetchSet(set_options, function (err, rslt) {
+        if (err) {
+            throw new Error(err);
+        }
+
+        if (rslt.notFound) {
+            logger.info("[DevUsingDataTypes] set 'cities' is not found!");
+        }
+    });
+
+    create_or_update_counter(counter_options, 1, function(opt1) {
         display_counter(opt1, function(opt2) {
             create_or_update_counter(opt2, -1, function(opt3) {
                 display_counter(opt3);
