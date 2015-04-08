@@ -27,15 +27,77 @@ function DevUsingDataTypes() {
         key: 'cities'
     };
 
-    client.fetchSet(set_options, function (err, rslt) {
-        if (err) {
-            throw new Error(err);
-        }
+    demonstrate_empty_set(set_options);
 
-        if (rslt.notFound) {
-            logger.info("[DevUsingDataTypes] set 'cities' is not found!");
-        }
-    });
+    function demonstrate_empty_set(options) {
+        client.fetchSet(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            if (rslt.notFound) {
+                logger.info("[DevUsingDataTypes] set 'cities' is not found!");
+            }
+            add_to_cities_set();
+        });
+    }
+
+    function add_to_cities_set() {
+        var options = {
+            bucketType: 'sets',
+            bucket: 'travel',
+            key: 'cities'
+        };
+        var cmd = new Riak.Commands.CRDT.UpdateSet.Builder()
+            .withBucketType(options.bucketType)
+            .withBucket(options.bucket)
+            .withKey(options.key)
+            .withAdditions(['Toronto', 'Montreal'])
+            .withCallback(
+                function (err, rslt) {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    change_cities_set();
+                }
+            )
+            .build();
+        client.execute(cmd);
+    }
+
+    function change_cities_set() {
+        var options = {
+            bucketType: 'sets',
+            bucket: 'travel',
+            key: 'cities'
+        };
+        client.fetchSet(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            var update_opts = clone(options);
+            update_opts.context = rslt.context;
+            update_opts.additions = ['Hamilton', 'Ottawa'];
+            update_opts.removals = ['Montreal', 'Ottawa'];
+
+            client.updateSet(update_opts, function (err, rslt) {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                client.fetchSet(options, function(err, rslt) {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    logger.info("[DevUsingDataTypes] cities set values: '%s'",
+                        rslt.values.join(', '));
+                });
+            });
+        });
+    }
 
     create_or_update_counter(counter_options, 1, function(opt1) {
         display_counter(opt1, function(opt2) {
