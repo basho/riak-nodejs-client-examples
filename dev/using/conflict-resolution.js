@@ -16,20 +16,22 @@ var Riak = require('basho-riak-client');
 function DevUsingConflictResolution() {
     var client = config.createClient();
 
-    siblings_in_action();
+    siblings_in_action('nickelodeon', read_siblings);
 
-    function siblings_in_action() {
+    siblings_in_action('nickelodeon2', resolve_choosing_first);
+
+    function siblings_in_action(bucket_name, next_step_func) {
         var obj1 = new Riak.Commands.KV.RiakObject();
         obj1.setContentType('text/plain');
         obj1.setBucketType('siblings_allowed');
-        obj1.setBucket('nickolodeon');
+        obj1.setBucket(bucket_name);
         obj1.setKey('best_character');
         obj1.setValue('Ren');
 
         var obj2 = new Riak.Commands.KV.RiakObject();
         obj2.setContentType('text/plain');
         obj2.setBucketType('siblings_allowed');
-        obj2.setBucket('nickolodeon');
+        obj2.setBucket(bucket_name);
         obj2.setKey('best_character');
         obj2.setValue('Ren');
 
@@ -48,29 +50,29 @@ function DevUsingConflictResolution() {
             if (err) {
                 throw new Error(err);
             }
-            read_siblings();
+            next_step_func(bucket_name);
         });
     }
 
-    function read_siblings() {
+    function read_siblings(bucket_name) {
         client.fetchValue({
-            bucketType: 'siblings_allowed', bucket:
-                'nickolodeon', key: 'best_character'
+            bucketType: 'siblings_allowed',
+            bucket: bucket_name, key: 'best_character'
         }, function (err, rslt) {
             if (err) {
                 throw new Error(err);
             }
-            logger.info("nickolodeon/best_character has '%d' siblings",
-                rslt.values.length);
+            logger.info("%s/best_character has '%d' siblings",
+                bucket_name, rslt.values.length);
 
-            resolve_siblings();
+            resolve_siblings(bucket_name);
         });
     }
 
-    function resolve_siblings() {
+    function resolve_siblings(bucket_name) {
         client.fetchValue({
-            bucketType: 'siblings_allowed', bucket:
-                'nickolodeon', key: 'best_character'
+            bucketType: 'siblings_allowed',
+            bucket: bucket_name, key: 'best_character'
         }, function (err, rslt) {
             if (err) {
                 throw new Error(err);
@@ -88,6 +90,27 @@ function DevUsingConflictResolution() {
                 });
         });
     }
+
+    function resolve_choosing_first(bucket_name) {
+        client.fetchValue({
+            bucketType: 'siblings_allowed',
+            bucket: bucket_name, key: 'best_character'
+        }, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            var riakObj = rslt.values.shift();
+            client.storeValue({ value: riakObj, returnBody: true },
+                function (err, rslt) {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    assert(rslt.values.length === 1);
+                });
+        });
+    };
 }
 
 module.exports = DevUsingConflictResolution;
