@@ -20,6 +20,8 @@ function DevUsingConflictResolution() {
 
     siblings_in_action('nickelodeon2', resolve_choosing_first);
 
+    siblings_in_action('nickelodeon3', resolve_using_resolver);
+
     function siblings_in_action(bucket_name, next_step_func) {
         var obj1 = new Riak.Commands.KV.RiakObject();
         obj1.setContentType('text/plain');
@@ -99,6 +101,42 @@ function DevUsingConflictResolution() {
             if (err) {
                 throw new Error(err);
             }
+
+            var riakObj = rslt.values.shift();
+            client.storeValue({ value: riakObj, returnBody: true },
+                function (err, rslt) {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    assert(rslt.values.length === 1);
+                });
+        });
+    };
+
+    function resolve_using_resolver(bucket_name) {
+        
+        function conflict_resolver(objects) {
+            /*
+             * Note: a more sophisticated resolver would
+             * look into the objects to pick one, or perhaps
+             * present the list to a user to choose
+             */
+            return objects.shift();
+        }
+
+        client.fetchValue({
+            bucketType: 'siblings_allowed',
+            bucket: bucket_name, key: 'best_character',
+            conflictResolver: conflict_resolver
+        }, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            // Test that resolver just returned one
+            // RiakObject
+            assert(rslt.values.length === 1);
 
             var riakObj = rslt.values.shift();
             client.storeValue({ value: riakObj, returnBody: true },
