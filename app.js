@@ -7,6 +7,9 @@
  * create the expected bucket types and other settings.
  */
 
+var config = require('./config');
+var Riak = require('basho-riak-client');
+
 var TasteOfRiakIntroduction = require('./dev/taste-of-riak/introduction');
 
 var DevUsingBasics = require('./dev/using/basics');
@@ -26,3 +29,11 @@ DevUsingConflictResolution();
 DevUsingDataTypes();
 
 DevAdvancedBucketTypes();
+
+var client = config.createClient();
+client.shutdown(function (state) {
+    if (state === Riak.Cluster.State.SHUTDOWN) {
+        process.exit();
+    }
+});
+

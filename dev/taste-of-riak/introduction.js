@@ -104,18 +104,10 @@ function TasteOfRiakIntroduction() {
                 throw new Error(err);
             } else {
                 logger.info('[TasteOfRiakIntro] john doe deleted from Riak');
-                client_shutdown();
-            }
-        });
-    }
-
-    function client_shutdown() {
-        client.shutdown(function (state) {
-            if (state === Riak.Cluster.State.SHUTDOWN) {
-                process.exit();
             }
         });
     }
 }
 
 module.exports = TasteOfRiakIntroduction;
+

@@ -15,21 +15,18 @@ var Riak = require('basho-riak-client');
 function DevUsingDataTypes() {
     var client = config.createClient();
 
-    var counter_options = {
-        bucketType: 'counters',
-        bucket: 'counter',
-        key: 'traffic_tickets'
-    };
+    counter_examples();
 
-    var set_options = {
-        bucketType: 'sets',
-        bucket: 'travel',
-        key: 'cities'
-    };
+    set_examples();
 
-    demonstrate_empty_set(set_options);
+    map_examples();
 
-    function demonstrate_empty_set(options) {
+    function set_examples() {
+        var options = {
+            bucketType: 'sets',
+            bucket: 'travel',
+            key: 'cities'
+        };
         client.fetchSet(options, function (err, rslt) {
             if (err) {
                 throw new Error(err);
@@ -99,13 +96,20 @@ function DevUsingDataTypes() {
         });
     }
 
-    create_or_update_counter(counter_options, 1, function(opt1) {
-        display_counter(opt1, function(opt2) {
-            create_or_update_counter(opt2, -1, function(opt3) {
-                display_counter(opt3);
+    function counter_examples() {
+        var options = {
+            bucketType: 'counters',
+            bucket: 'counter',
+            key: 'traffic_tickets'
+        };
+        create_or_update_counter(options, 1, function(opt1) {
+            display_counter(opt1, function(opt2) {
+                create_or_update_counter(opt2, -1, function(opt3) {
+                    display_counter(opt3);
+                });
             });
         });
-    });
+    }
 
     function create_or_update_counter(options, amount, next_func) {
         var my_opts = clone(options);
@@ -142,6 +146,110 @@ function DevUsingDataTypes() {
                 }
             }
         );
+    }
+
+    function map_examples() {
+
+        var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+        mapOp.setRegister('first_name', new Buffer('Ahmed'));
+        mapOp.setRegister('phone_number', new Buffer('5551234567'));
+
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info',
+            op: mapOp
+        };
+
+        client.updateMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+            
+            flags_within_maps();
+        });
+    }
+
+    function print_map(next_func) {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+
+        client.fetchMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            logger.info("[DevUsingDataTypes] fetched map: %s", JSON.stringify(rslt));
+
+            if (next_func) {
+                next_func();
+            }
+        });
+    }
+
+    function flags_within_maps() {
+        var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+        mapOp.setFlag('enterprise_customer', false);
+
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info',
+            op: mapOp
+        };
+
+        client.updateMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            print_map(counters_within_maps);
+        });
+    }
+
+    function counters_within_maps() {
+        var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+        mapOp.incrementCounter('page_visits', 1);
+
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info',
+            op: mapOp
+        };
+
+        client.updateMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            print_map(sets_within_maps);
+        });
+    }
+
+    function sets_within_maps() {
+        var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+        mapOp.addToSet('interests', 'robots');
+        mapOp.addToSet('interests', 'opera');
+        mapOp.addToSet('interests', 'motorcycles');
+
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info',
+            op: mapOp
+        };
+
+        client.updateMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            print_map();
+        });
     }
 }
 
