@@ -7,6 +7,7 @@ var config = require('../../config');
  * http://docs.basho.com/riak/latest/dev/using/data-types/
  */
 
+var assert = require('assert');
 var async = require('async');
 var clone = require('clone');
 var logger = require('winston');
@@ -248,7 +249,23 @@ function DevUsingDataTypes() {
                 throw new Error(err);
             }
 
-            print_map();
+            verify_interests_set();
+        });
+    }
+
+    function verify_interests_set() {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+
+        client.fetchMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            assert(rslt.map.sets['interests'].indexOf('robots') !== -1);
         });
     }
 }
