@@ -266,6 +266,37 @@ function DevUsingDataTypes() {
             }
 
             assert(rslt.map.sets['interests'].indexOf('robots') !== -1);
+
+            update_interests_set();
+        });
+    }
+
+    function update_interests_set() {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+
+        client.fetchMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+            mapOp.removeFromSet('interests', 'opera');
+            mapOp.addToSet('interests', 'indie pop');
+
+            options.context = rslt.context;
+            options.op = mapOp;
+
+            client.updateMap(options, function (err, rslt) {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                print_map();
+            });
         });
     }
 }
