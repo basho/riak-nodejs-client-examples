@@ -1,2 +1,2 @@
 # riak-nodejs-client-examples
-Riak NodeJS Client example code
+Riak Node.js Client example code
