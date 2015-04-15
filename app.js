@@ -22,6 +22,8 @@ var DevUsingDataTypes = require('./dev/using/data-types');
 
 var DevAdvancedBucketTypes = require('./dev/advanced/bucket-types');
 
+var DevDataModelingDataTypes = require('./dev/data-modeling/data-types');
+
 TasteOfRiakIntroduction();
 
 DevUsingBasics();
@@ -31,6 +33,8 @@ DevUsingConflictResolution();
 DevUsingDataTypes();
 
 DevAdvancedBucketTypes();
+
+DevDataModelingDataTypes();
 
 var client = config.createClient();
 client.shutdown(function (state) {
