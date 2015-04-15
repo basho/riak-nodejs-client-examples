@@ -207,7 +207,7 @@ function DevUsingDataTypes() {
                 throw new Error(err);
             }
 
-            print_map(counters_within_maps);
+            counters_within_maps();
         });
     }
 
@@ -227,7 +227,7 @@ function DevUsingDataTypes() {
                 throw new Error(err);
             }
 
-            print_map(sets_within_maps);
+            sets_within_maps();
         });
     }
 
@@ -297,7 +297,7 @@ function DevUsingDataTypes() {
                     throw new Error(err);
                 }
 
-                print_map(maps_within_maps);
+                maps_within_maps();
             });
         });
     }
@@ -322,7 +322,7 @@ function DevUsingDataTypes() {
                 throw new Error(err);
             }
 
-            print_map(examine_map_register);
+            examine_map_register();
         });
     }
 
@@ -376,7 +376,7 @@ function DevUsingDataTypes() {
                     throw new Error(err);
                 }
 
-                print_map(subscribe_annika_to_plans);
+                subscribe_annika_to_plans();
             });
         });
     }
@@ -412,12 +412,143 @@ function DevUsingDataTypes() {
                     throw new Error(err);
                 }
 
-                print_map(retrieve_annika_plans);
+                retrieve_annika_plans();
             });
         });
     }
 
     function retrieve_annika_plans() {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+
+        client.fetchMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            var enterprisePlan =
+                rslt.map.maps.annika_info.flags.enterprise_plan;
+
+            logger.info("[DevUsingDataTypes] Annika enterprise plan '%s'",
+                enterprisePlan);
+
+            add_counter_to_inner_map();
+        });
+    }
+
+    function add_counter_to_inner_map() {
+        var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+        mapOp.map('annika_info').incrementCounter('widget_purchases', 1);
+
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info',
+            op: mapOp
+        };
+
+        client.updateMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            store_annikas_interest();
+        });
+    }
+    
+    function store_annikas_interest() {
+        var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+        var annika_map = mapOp.map('annika_info');
+        annika_map.addToSet('interests', 'tango dancing');
+
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info',
+            op: mapOp
+        };
+
+        client.updateMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            remove_annikas_interest();
+        });
+    }
+
+    function remove_annikas_interest() {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+        
+        client.fetchMap(options, function (err, rslt) {
+            var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+            var annika_map = mapOp.map('annika_info');
+            annika_map.removeFromSet('interests', 'tango dancing');
+
+            options = {
+                bucketType: 'maps',
+                bucket: 'customers',
+                key: 'ahmed_info',
+                op: mapOp,
+                context: rslt.context
+            };
+
+            client.updateMap(options, function (err, rslt) {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                store_annikas_purchase_info();
+            });
+        });
+    }
+
+    function store_annikas_purchase_info() {
+        var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+        var annika_map = mapOp.map('annika_info');
+        var annika_purchase_map = annika_map.map('purchase');
+        annika_purchase_map.setFlag('first_purchase', true);
+        annika_purchase_map.setRegister('amount', '1271');
+        annika_purchase_map.addToSet('items', 'large widget');
+
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info',
+            op: mapOp
+        };
+
+        client.updateMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            fetch_and_display_context();
+        });
+    }
+
+    function fetch_and_display_context() {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+        
+        client.fetchMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            logger.info("[DevUsingDataTypes] context: '%s'",
+                rslt.context.toString('base64'));
+        });
     }
 }
 
