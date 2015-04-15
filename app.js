@@ -1,3 +1,5 @@
+ /* jshint newcap: false */
+
 'use strict';
 
 /*

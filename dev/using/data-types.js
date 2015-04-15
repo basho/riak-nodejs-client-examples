@@ -152,8 +152,8 @@ function DevUsingDataTypes() {
     function map_examples() {
 
         var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
-        mapOp.setRegister('first_name', new Buffer('Ahmed'));
-        mapOp.setRegister('phone_number', new Buffer('5551234567'));
+        mapOp.setRegister('first_name', 'Ahmed');
+        mapOp.setRegister('phone_number', '5551234567');
 
         var options = {
             bucketType: 'maps',
@@ -265,7 +265,9 @@ function DevUsingDataTypes() {
                 throw new Error(err);
             }
 
+            /* jshint sub:true */
             assert(rslt.map.sets['interests'].indexOf('robots') !== -1);
+            /* jshint sub:false */
 
             update_interests_set();
         });
@@ -295,9 +297,127 @@ function DevUsingDataTypes() {
                     throw new Error(err);
                 }
 
-                print_map();
+                print_map(maps_within_maps);
             });
         });
+    }
+
+    function maps_within_maps() {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+
+        var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+        mapOp.map('annika_info')
+            .setRegister('first_name', 'Annika')
+            .setRegister('last_name', 'Weiss')
+            .setRegister('phone_number', '5559876543');
+
+        options.op = mapOp;
+
+        client.updateMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            print_map(examine_map_register);
+        });
+    }
+
+    function examine_map_register() {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+
+        client.fetchMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            var first_name_register =
+                rslt.map.maps.annika_info.registers.first_name;
+
+            logger.info("[DevUsingDataTypes] Annika's first name is '%s'",
+                first_name_register.toString('utf8'));
+
+            remove_register_from_inner_map(options, rslt);
+        });
+    }
+
+    function remove_register_from_inner_map() {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+
+        client.fetchMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+            mapOp.map('annika_info').removeRegister('first_name');
+
+            var options = {
+                bucketType: 'maps',
+                bucket: 'customers',
+                key: 'ahmed_info',
+                op: mapOp,
+                context: rslt.context,
+            };
+
+            client.updateMap(options, function (err, rslt) {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                print_map(subscribe_annika_to_plans);
+            });
+        });
+    }
+
+    function subscribe_annika_to_plans() {
+        var options = {
+            bucketType: 'maps',
+            bucket: 'customers',
+            key: 'ahmed_info'
+        };
+
+        client.fetchMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+            var annika_map = mapOp.map('annika_info');
+            annika_map.setFlag('enterprise_plan', false);
+            annika_map.setFlag('family_plan', false);
+            annika_map.setFlag('free_plan', true);
+
+            var options = {
+                bucketType: 'maps',
+                bucket: 'customers',
+                key: 'ahmed_info',
+                op: mapOp,
+                context: rslt.context,
+            };
+
+            client.updateMap(options, function (err, rslt) {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                print_map(retrieve_annika_plans);
+            });
+        });
+    }
+
+    function retrieve_annika_plans() {
     }
 }
 

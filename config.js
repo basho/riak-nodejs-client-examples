@@ -14,7 +14,7 @@ function Config() { }
 
 var createClient = function () {
     return new Riak.Client(riakNodes);
-}
+};
 
 module.exports = Config;
 module.exports.createClient = createClient;

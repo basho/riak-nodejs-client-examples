@@ -112,7 +112,7 @@ function DevUsingConflictResolution() {
                     assert(rslt.values.length === 1);
                 });
         });
-    };
+    }
 
     function resolve_using_resolver(bucket_name) {
         
@@ -148,7 +148,7 @@ function DevUsingConflictResolution() {
                     assert(rslt.values.length === 1);
                 });
         });
-    };
+    }
 }
 
 module.exports = DevUsingConflictResolution;
