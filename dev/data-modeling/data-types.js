@@ -100,7 +100,7 @@ User.prototype.downgradeAccount = function (callback) {
     this.updateMapWithContext(mapOp, callback);
 };
 
-function DevDataModelingDataTypes() {
+function DevDataModelingDataTypes(done) {
     var client = config.createClient();
 
     var userOptions = {
@@ -112,6 +112,7 @@ function DevDataModelingDataTypes() {
 
     var bruce = new User(userOptions, function (err, rslt) {
         logger.info("[DevDataModelingDataTypes] stored Bruce Wayne");
+        done(err, rslt);
     });
 }
 

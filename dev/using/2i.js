@@ -11,12 +11,14 @@ var async = require('async');
 var logger = require('winston');
 var Riak = require('basho-riak-client');
 
-function DevUsing2i() {
+function DevUsing2i(done) {
     var client = config.createClient();
 
     inserting_objects();
 
     indexing_objects();
+
+    done();
 
     function inserting_objects() {
         var riakObj = new Riak.Commands.KV.RiakObject();

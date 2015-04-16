@@ -13,7 +13,7 @@ var clone = require('clone');
 var logger = require('winston');
 var Riak = require('basho-riak-client');
 
-function DevUsingDataTypes() {
+function DevUsingDataTypes(done) {
     var client = config.createClient();
 
     counter_examples();
@@ -21,6 +21,8 @@ function DevUsingDataTypes() {
     set_examples();
 
     map_examples();
+
+    done();
 
     function set_examples() {
         var options = {

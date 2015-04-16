@@ -11,7 +11,7 @@ var async = require('async');
 var logger = require('winston');
 var Riak = require('basho-riak-client');
 
-function DevUsingBasics() {
+function DevUsingBasics(done) {
     var client = config.createClient();
 
     read_rufus();
@@ -166,6 +166,7 @@ function DevUsingBasics() {
                 throw new Error(err);
             }
             logger.info("[DevUsingBasics] props: %s", JSON.stringify(rslt));
+            done(err, rslt);
         });
     }
 }

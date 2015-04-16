@@ -11,7 +11,7 @@ var async = require('async');
 var logger = require('winston');
 var Riak = require('basho-riak-client');
 
-function DevUsingUpdates() {
+function DevUsingUpdates(done) {
     var client = config.createClient();
 
     put_coach();
@@ -47,6 +47,7 @@ function DevUsingUpdates() {
                 if (err) {
                     throw new Error(err);
                 }
+                done(err, rslt);
             });
         });
     }
