@@ -104,7 +104,9 @@ if (argv.all) {
 var example_found = false;
 Object.keys(argv).forEach(function (arg) {
     if (examples[arg]) {
+        example_found = true;
         var ex_func = examples[arg][1];
+        logger.info("Running '%s'", arg);
         ex_func(function (err, rslt) {
             client_shutdown();
         });
