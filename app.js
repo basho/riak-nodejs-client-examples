@@ -101,14 +101,17 @@ if (argv.all) {
     });
 }
 
-/*
-TasteOfRiakIntroduction();
-DevUsingBasics();
-DevUsingUpdates();
-DevUsing2i();
-DevUsingConflictResolution();
-DevUsingDataTypes();
-DevAdvancedBucketTypes();
-DevDataModelingDataTypes();
-*/
+var example_found = false;
+Object.keys(argv).forEach(function (arg) {
+    if (examples[arg]) {
+        var ex_func = examples[arg][1];
+        ex_func(function (err, rslt) {
+            client_shutdown();
+        });
+    }
+});
+
+if (! example_found) {
+    usage();
+}
 
