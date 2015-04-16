@@ -55,6 +55,7 @@ Repository.prototype.save = function (model, callback) {
                 if (err) {
                     callback(err, null);
                 } else {
+                    logger.debug("rslt: '%s'", JSON.stringify(rslt));
                     callback(err, self.buildModel(rslt));
                 }
             });

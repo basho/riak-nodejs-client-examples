@@ -15,21 +15,27 @@ function UserRepository(client) {
 inherits(UserRepository, Repository);
 
 UserRepository.prototype.buildModel = function (rslt) {
-    var rv = null;
-    if (rslt.map) {
-        var firstName = rslt.map.registers.first_name.toString('utf8');
-        var lastName = rslt.map.registers.last_name.toString('utf8');
+    var firstName = rslt.map.registers.first_name.toString('utf8');
+    var lastName = rslt.map.registers.last_name.toString('utf8');
 
-        var interests = [];
-        if (rslt.map.sets.interests) {
-            rslt.map.sets.interests.forEach(function (interest) {
-                interests.push(interest);
-            });
-        }
-
-        rv = new User(firstName, lastName, interests);
+    var interests = [];
+    if (rslt.map.sets.interests) {
+        rslt.map.sets.interests.forEach(function (interest) {
+            interests.push(interest);
+        });
     }
-    return rv;
+
+    var visits = 0;
+    if (rslt.map.counters.visits) {
+        visits = rslt.map.counters.visits;
+    }
+
+    var paid_account = false;
+    if (rslt.map.flags.paid_account) {
+        paid_account = rslt.map.flags.paid_account;
+    }
+
+    return new User(firstName, lastName, interests, visits, paid_account);
 };
 
 UserRepository.prototype.getMapOperation = function (model) {
@@ -41,6 +47,10 @@ UserRepository.prototype.getMapOperation = function (model) {
             mapOp.addToSet('interests', interest);
         });
     }
+    if (model.paid_account) {
+        mapOp.setFlag('paid_account', model.paid_account);
+    }
+    // Note: visits are taken care of on a per-visit basis
     return mapOp;
 };
 

@@ -31,6 +31,8 @@ function DevDataModelingDataTypes(done) {
 
         logger.info("[DevDataModelingDataTypes] saved bruce: '%s'", JSON.stringify(rslt));
 
+        bruce.visitPage();
+
         done();
     });
 }

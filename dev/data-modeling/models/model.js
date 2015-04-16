@@ -3,7 +3,7 @@
 var emitter = require('events').EventEmitter;
 
 function Model() {
-    function propertyChanged(propertyName, value) {
+    this.propertyChanged = function (propertyName, value) {
         emitter.emit('propertyChanged', propertyName, value);
     };
 }
