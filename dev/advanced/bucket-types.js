@@ -12,7 +12,7 @@ var async = require('async');
 var logger = require('winston');
 var Riak = require('basho-riak-client');
 
-function DevAdvancedBucketTypes() {
+function DevAdvancedBucketTypes(done) {
     var client = config.createClient();
 
     default_type_example();
@@ -20,6 +20,8 @@ function DevAdvancedBucketTypes() {
     client_usage_example();
 
     memes_example();
+
+    done();
 
     function default_type_example() {
         var obj1 = new Riak.Commands.KV.RiakObject();

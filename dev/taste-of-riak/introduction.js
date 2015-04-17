@@ -12,7 +12,7 @@ var async = require('async');
 var logger = require('winston');
 var Riak = require('basho-riak-client');
 
-function TasteOfRiakIntroduction() {
+function TasteOfRiakIntroduction(done) {
     var client = config.createClient();
 
     client.ping(function (err, rslt) {
@@ -105,6 +105,7 @@ function TasteOfRiakIntroduction() {
             } else {
                 logger.info('[TasteOfRiakIntro] john doe deleted from Riak');
             }
+            done(err, rslt);
         });
     }
 }

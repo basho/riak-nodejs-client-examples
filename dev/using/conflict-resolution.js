@@ -13,7 +13,7 @@ var async = require('async');
 var logger = require('winston');
 var Riak = require('basho-riak-client');
 
-function DevUsingConflictResolution() {
+function DevUsingConflictResolution(done) {
     var client = config.createClient();
 
     siblings_in_action('nickelodeon', read_siblings);
@@ -21,6 +21,8 @@ function DevUsingConflictResolution() {
     siblings_in_action('nickelodeon2', resolve_choosing_first);
 
     siblings_in_action('nickelodeon3', resolve_using_resolver);
+
+    done();
 
     function siblings_in_action(bucket_name, next_step_func) {
         var obj1 = new Riak.Commands.KV.RiakObject();
