@@ -29,6 +29,7 @@ var DevAdvancedBucketTypes = require('./dev/advanced/bucket-types');
 var DevDataModelingDataTypes = require('./dev/data-modeling/data-types');
 
 var DevSearchDocumentStore = require('./dev/search/document-store');
+var DevSearchDataTypes = require('./dev/search/search-data-types');
 
 var examples = {
     TasteOfRiak: [ '               Taste Of Riak Intro', TasteOfRiakIntroduction],
@@ -39,7 +40,8 @@ var examples = {
     DevUsingDataTypes: [ '         Dev/Using/Data-Types', DevUsingDataTypes] ,
     DevAdvancedBucketTypes: [ '    Dev/Advanced/Bucket-Types', DevAdvancedBucketTypes ],
     DevDataModelingDataTypes: [ '  Dev/Data-Modeling/Data-Types', DevDataModelingDataTypes ],
-    DevSearchDocumentStore: [ '    Dev/Search/Document-Store', DevSearchDocumentStore ]
+    DevSearchDocumentStore: [ '    Dev/Search/Document-Store', DevSearchDocumentStore ],
+    DevSearchDataTypes: [ '        Dev/Search/Search-Data-Types', DevSearchDataTypes, DevSearchDataTypes.Init ]
 };
 
 function client_shutdown() {
@@ -55,6 +57,7 @@ function usage() {
     console.log('Argument                     Docs Page');
     console.log('--------------------------------------------------------------');
     console.log('--all                        Run all examples');
+    console.log('--init                       Init all examples');
     Object.keys(examples).forEach(function (ex) {
         var name = examples[ex][0];
         console.log("--" + ex + " " + name);
@@ -86,13 +89,49 @@ if (argv.usage) {
     process.exit();
 }
 
+function maybeRunExampleInit(example, doneFunc) {
+    var ex_name = example[0].trim();
+    logger.debug("maybe running init for '%s'", ex_name);
+    if (example.length === 3) {
+        logger.debug("running init for '%s'", ex_name);
+        var initFunc = example[2];
+        initFunc(doneFunc);
+    } else {
+        doneFunc();
+    }
+}
+
+function executeExample(example, doneFunc) {
+    var ex_func = example[1];
+    maybeRunExampleInit(example, function () {
+        logger.debug("running ex_func for '%s'", ex_name);
+        ex_func(doneFunc);
+    });
+}
+
+if (argv.init) {
+    logger.info("Init ALL examples!");
+    var funcs = [];
+    Object.keys(examples).forEach(function (ex) {
+        var async_runner = function (async_cb) {
+            maybeRunExampleInit(examples[ex], async_cb);
+        };
+        funcs.push(async_runner);
+    });
+    async.parallel(funcs, function (err, rslts) {
+        if (err) {
+            logger.err("error: '%s'", err);
+        }
+        client_shutdown();
+    });
+}
+
 if (argv.all) {
     logger.info("Running ALL examples!");
     var funcs = [];
     Object.keys(examples).forEach(function (ex) {
-        var ex_func = examples[ex][1];
         var async_runner = function (async_cb) {
-            ex_func(async_cb);
+            executeExample(examples[ex], async_cb);
         };
         funcs.push(async_runner);
     });
@@ -110,7 +149,7 @@ Object.keys(argv).forEach(function (arg) {
         example_found = true;
         var ex_func = examples[arg][1];
         logger.info("Running '%s'", arg);
-        ex_func(function (err, rslt) {
+        executeExample(examples[arg], function (err, rslt) {
             client_shutdown();
         });
     }
