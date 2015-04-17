@@ -55,14 +55,11 @@ function DevSearchDataTypes(done) {
                 var options = {
                     bucketType: 'counters',
                     bucket: 'people',
-                    key: 'christ_hitchens'
+                    key: 'christ_hitchens',
+                    increment: 10
                 };
 
-                var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
-                mapOp.incrementCounter(10);
-                options.op = mapOp;
-
-                client.updateMap(options, function (err, rslt) {
+                client.updateCounter(options, function (err, rslt) {
                     throwIfErr(err);
                     async_cb();
                 });
@@ -71,14 +68,12 @@ function DevSearchDataTypes(done) {
                 var options = {
                     bucketType: 'counters',
                     bucket: 'people',
-                    key: 'joan_rivers'
+                    key: 'joan_rivers',
+                    increment: 25
+
                 };
 
-                var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
-                mapOp.incrementCounter(25);
-                options.op = mapOp;
-
-                client.updateMap(options, function (err, rslt) {
+                client.updateCounter(options, function (err, rslt) {
                     throwIfErr(err);
                     async_cb();
                 });

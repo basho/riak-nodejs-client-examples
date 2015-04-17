@@ -90,10 +90,10 @@ if (argv.usage) {
 }
 
 function maybeRunExampleInit(example, doneFunc) {
-    var ex_name = example[0].trim();
-    logger.debug("maybe running init for '%s'", ex_name);
+    var exName = example[0].trim();
+    logger.debug("maybe running init for '%s'", exName);
     if (example.length === 3) {
-        logger.debug("running init for '%s'", ex_name);
+        logger.debug("running init for '%s'", exName);
         var initFunc = example[2];
         initFunc(doneFunc);
     } else {
@@ -102,10 +102,11 @@ function maybeRunExampleInit(example, doneFunc) {
 }
 
 function executeExample(example, doneFunc) {
-    var ex_func = example[1];
+    var exName = example[0].trim();
+    var exFunc = example[1];
     maybeRunExampleInit(example, function () {
-        logger.debug("running ex_func for '%s'", ex_name);
-        ex_func(doneFunc);
+        logger.debug("running exFunc for '%s'", exName);
+        exFunc(doneFunc);
     });
 }
 
@@ -147,7 +148,7 @@ var example_found = false;
 Object.keys(argv).forEach(function (arg) {
     if (examples[arg]) {
         example_found = true;
-        var ex_func = examples[arg][1];
+        var exFunc = examples[arg][1];
         logger.info("Running '%s'", arg);
         executeExample(examples[arg], function (err, rslt) {
             client_shutdown();
