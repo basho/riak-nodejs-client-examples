@@ -5,7 +5,7 @@ var logger = require('winston');
 
 var Riak = require('basho-riak-client');
 
-var Repository = require('./repository');
+var Repository = require('../../repository');
 var User = require('../models/user');
 
 function UserRepository(client) {

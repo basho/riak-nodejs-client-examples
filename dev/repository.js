@@ -1,7 +1,7 @@
-﻿'use strict';
+'use strict';
 
 var logger = require('winston');
-var Model = require('../models/model');
+var Model = require('./model');
 
 function Repository(client_arg) {
 

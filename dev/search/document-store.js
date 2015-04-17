@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 var config = require('../../config');
 
@@ -9,7 +9,7 @@ var config = require('../../config');
 
 var async = require('async');
 var fs = require('fs');
-var http = require('http');
+var https = require('https');
 var logger = require('winston');
 var path = require('path');
 var Riak = require('basho-riak-client');
@@ -17,7 +17,7 @@ var Riak = require('basho-riak-client');
 function maybeDownloadSchemaFile(callback) {
 
     var blogPostSchema =
-        'http://github.com/basho/basho_docs/raw/master/source/data/blog_post_schema.xml';
+        'https://raw.githubusercontent.com/basho/basho_docs/master/source/data/blog_post_schema.xml';
     var blogPostSchemaXmlFile = 'blog_post_schema.xml';
 
     fs.exists(blogPostSchemaXmlFile, function (exists) {
@@ -27,7 +27,7 @@ function maybeDownloadSchemaFile(callback) {
         } else {
             logger.info("[DevSearchDocumentStore] downloading '%s'", filePath);
             var file = fs.createWriteStream(blogPostSchemaXmlFile);
-            var request = http.get(blogPostSchema, function(response) {
+            var request = https.get(blogPostSchema, function(response) {
                 response.pipe(file);
                 file.on('finish', function () {
                     file.close(callback(filePath));
@@ -50,7 +50,7 @@ function DevSearchDocumentStore(done) {
     maybeDownloadSchemaFile(function (schemaFile) {
         fs.readFile(schemaFile, function (err, data) {
             throwIfErr(err);
-            storeSchemaInRiak(data);
+            storeSchemaInRiak(data.toString('utf8'));
         });
     });
 
@@ -62,8 +62,25 @@ function DevSearchDocumentStore(done) {
         };
         client.storeSchema(options, function (err, rslt) {
             throwIfErr(err);
+
+            createIndexInRiak();
         });
     }
+
+    function createIndexInRiak() {
+        var options = {
+            schemaName: 'blog_post_schema',
+            indexName: 'blog_posts'
+        };
+        client.storeIndex(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+            
+            done();
+        });
+    };
+
 }
 
 module.exports = DevSearchDocumentStore;

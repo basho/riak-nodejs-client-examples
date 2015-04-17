@@ -1,6 +1,6 @@
 'use strict';
 
-var Model = require('./model');
+var Model = require('../../model');
 var inherits = require('util').inherits;
 
 function User(firstName, lastName, interests, visits, paid_account) {
