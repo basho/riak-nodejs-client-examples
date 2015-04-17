@@ -35,14 +35,35 @@ function maybeDownloadSchemaFile(callback) {
             });
         }
     });
+
+}
+
+function throwIfErr(err) {
+    if (err) {
+        throw new Error(err);
+    }
 }
 
 function DevSearchDocumentStore(done) {
+    var client = config.createClient();
 
     maybeDownloadSchemaFile(function (schemaFile) {
-        done();
+        fs.readFile(schemaFile, function (err, data) {
+            throwIfErr(err);
+            storeSchemaInRiak(data);
+        });
     });
 
+    function storeSchemaInRiak(schemaXml) {
+
+        var options = {
+            schemaName: 'blog_post_schema',
+            schema: schemaXml
+        };
+        client.storeSchema(options, function (err, rslt) {
+            throwIfErr(err);
+        });
+    }
 }
 
 module.exports = DevSearchDocumentStore;
