@@ -90,7 +90,7 @@ function DevSearchDocumentStore(done) {
             'This one is so lulz!',
             'Cat Stevens',
             'Please check out these cat pics!',
-            [ 'adorbs', 'cheshire' ],
+            [ 'adorbs', 'cheshire', 'funny' ],
             new Date(),
             true
         );
@@ -100,9 +100,30 @@ function DevSearchDocumentStore(done) {
         repo.save(post, function (err, rslt) {
             logger.info("[DevSearchDocumentStore] key: '%s', model: '%s'",
                 rslt.key, JSON.stringify(rslt.model));
-            done();
+
+            queryBlogPosts();
         });
 
+    }
+
+    function queryBlogPosts() {
+
+        function search_cb(err, rslt) {
+            logger.info("[DevSearchDocumentStore] numFound: '%d', docs: '%s'",
+                rslt.numFound, JSON.stringify(rslt.docs));
+            done();
+        }
+
+        var searchCmd = new Riak.Commands.YZ.Search.Builder()
+            .withIndexName('blog_posts')
+            .withQuery('keywords_set:funny')
+            .withCallback(search_cb)
+            .build();
+
+        // Note: YZ is about 1 second behind Riak when indexing
+        setTimeout(function () {
+            client.execute(searchCmd);
+        }, 1000);
     }
 
 }

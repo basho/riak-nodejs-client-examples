@@ -27,7 +27,7 @@ BlogPostRepository.prototype.buildModel = function (rslt) {
         keywords.push(keyword);
     });
 
-    var datePosted = Date.parse(rslt.map.registers.date_posted.toString('utf8'));
+    var datePosted = Date.parse(rslt.map.registers.date.toString('utf8'));
     var published = rslt.map.flags.published;
 
     return new BlogPost(
@@ -46,7 +46,7 @@ BlogPostRepository.prototype.getMapOperation = function (model) {
         mapOp.addToSet('keywords', keyword);
     });
 
-    mapOp.setRegister('date_posted', model.datePosted.toString());
+    mapOp.setRegister('date', model.datePosted.toISOString());
     mapOp.setFlag('published', model.published);
 
     logger.debug("[BlogPostRepository.getMapOperation] mapOp: '%s'", JSON.stringify(mapOp));
