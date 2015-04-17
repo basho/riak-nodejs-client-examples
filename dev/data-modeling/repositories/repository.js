@@ -4,26 +4,44 @@ var logger = require('winston');
 var Model = require('../models/model');
 
 function Repository(client_arg) {
+
     this.client = client_arg;
+
+    this.fetch = function (key, notFoundOk, callback) {
+
+        var bucketType = this.getBucketType(),
+            bucket = this.getBucketName(),
+            options = {
+                bucketType: bucketType,
+                bucket: bucket,
+                key: key
+            };
+
+        this.client.fetchMap(options, callback);
+
+    };
 }
 
 Repository.prototype.get = function (key, notFoundOk, callback) {
-    var self = this,
-        bucketType = this.getBucketType(),
-        bucket = this.getBucketName(),
-        options = {
-            bucketType: bucketType,
-            bucket: bucket,
-            key: model.id
-        };
 
-    self.client.fetchMap(options, function (err, rslt) {
+    var self = this;
+
+    this.fetch(key, notFoundOk, function (err, riakRslt) {
         if (err) {
             callback(err, null);
         } else {
-            callback(err, self.buildModel(rslt));
+            if (riakRslt.notFound) {
+                if (notFoundOk) {
+                    callback(err, null);
+                } else {
+                    callback('key ' + key + ' not found', null);
+                }
+            } else {
+                callback(err, self.buildModel(riakRslt));
+            }
         }
     });
+
 };
 
 Repository.prototype.save = function (model, callback) {
@@ -31,35 +49,31 @@ Repository.prototype.save = function (model, callback) {
         throw new Error('argument must be a Model object');
     }
 
-    var self = this,
-        bucketType = this.getBucketType(),
-        bucket = this.getBucketName(),
-        options = {
-            bucketType: bucketType,
-            bucket: bucket,
-            key: model.id
-        };
+    var self = this;
 
-    self.client.fetchValue(options, function (err, rslt) {
-        if (err) {
-            callback(err, null);
-        } else {
-            options.returnBody = true;
-            options.op = self.getMapOperation(model);
+    this.get(model.id, true, function (err, rslt) {
 
-            if (rslt.context) {
-                options.context = rslt.context;
-            }
+        var bucketType = self.getBucketType(),
+            bucket = self.getBucketName(),
+            options = {
+                bucketType: bucketType,
+                bucket: bucket,
+                key: model.id,
+                returnBody: true,
+                op: self.getMapOperation(model)
+            };
 
-            self.client.updateMap(options, function (err, rslt) {
-                if (err) {
-                    callback(err, null);
-                } else {
-                    logger.debug("rslt: '%s'", JSON.stringify(rslt));
-                    callback(err, self.buildModel(rslt));
-                }
-            });
+        if (rslt && rslt.context) {
+            options.context = rslt.context;
         }
+
+        self.client.updateMap(options, function (err, update_rslt) {
+            if (err) {
+                callback(err, null);
+            } else {
+                callback(err, self.buildModel(update_rslt));
+            }
+        });
     });
 };
 

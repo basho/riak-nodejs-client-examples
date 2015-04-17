@@ -1,7 +1,9 @@
 'use strict';
 
-var Riak = require('basho-riak-client');
 var inherits = require('util').inherits;
+var logger = require('winston');
+
+var Riak = require('basho-riak-client');
 
 var Repository = require('./repository');
 var User = require('../models/user');
@@ -52,6 +54,111 @@ UserRepository.prototype.getMapOperation = function (model) {
     }
     // Note: visits are taken care of on a per-visit basis
     return mapOp;
+};
+
+UserRepository.prototype.setPaidAccount = function (model, value) {
+
+    var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+    mapOp.setFlag('paid_account', value);
+
+    var bucketType = this.getBucketType(),
+        bucket = this.getBucketName(),
+        options = {
+            bucketType: bucketType,
+            bucket: bucket,
+            key: model.id,
+            op: mapOp
+        };
+
+    this.client.updateMap(options, function (err, rslt) {
+        if (err) {
+            throw new Error(err);
+        } else {
+            logger.debug("[UserRepository.incrementPageVisits] rslt: '%s'", JSON.stringify(rslt));
+        }
+    });
+
+};
+
+UserRepository.prototype.incrementPageVisits = function (model) {
+
+    var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+    mapOp.incrementCounter('visits', 1);
+
+    var bucketType = this.getBucketType(),
+        bucket = this.getBucketName(),
+        options = {
+            bucketType: bucketType,
+            bucket: bucket,
+            key: model.id,
+            op: mapOp
+        };
+
+    this.client.updateMap(options, function (err, rslt) {
+        if (err) {
+            throw new Error(err);
+        } else {
+            logger.debug("[UserRepository.incrementPageVisits] rslt: '%s'", JSON.stringify(rslt));
+        }
+    });
+};
+
+UserRepository.prototype.addInterest = function (model, interest) {
+
+    var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+    mapOp.addToSet('interests', interest);
+
+    var bucketType = this.getBucketType(),
+        bucket = this.getBucketName(),
+        options = {
+            bucketType: bucketType,
+            bucket: bucket,
+            key: model.id,
+            op: mapOp
+        };
+
+    this.client.updateMap(options, function (err, rslt) {
+        if (err) {
+            throw new Error(err);
+        } else {
+            logger.debug("[UserRepository.addInterest] rslt: '%s'", JSON.stringify(rslt));
+        }
+    });
+};
+
+UserRepository.prototype.removeInterest = function (model, interest) {
+
+    var self = this;
+
+    this.fetch(model.id, false, function (err, riakRslt) {
+
+        if (err) {
+            throw new Error(err);
+        }
+
+        var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+        mapOp.removeFromSet('interests', interest);
+
+        var bucketType = self.getBucketType(),
+            bucket = self.getBucketName(),
+            options = {
+                bucketType: bucketType,
+                bucket: bucket,
+                key: model.id,
+                context: riakRslt.context,
+                op: mapOp
+            };
+
+
+        self.client.updateMap(options, function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            } else {
+                logger.debug("[UserRepository.removeInterest] rslt: '%s'", JSON.stringify(rslt));
+            }
+        });
+
+    });
 };
 
 module.exports = UserRepository;

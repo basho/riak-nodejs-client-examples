@@ -1,94 +1,52 @@
 ﻿'use strict';
 
-var Msg = require('./models/msg');
-var Timeline = require('./models/timeline');
+var logger = require('winston');
 
-function TimelineManager(argTimelineRepository, argMsgRepository) {
-    this.timelineRepository = argTimelineRepository;
-    this.msgRepository = argMsgRepository;
+var User = require('./models/user');
+var UserRepository = require('./repositories/user-repository');
 
-    this.addToTimeline = function (msg, timelineType, msgKey, callback) {
-        var self = this,
-            timelineKey = this.generateKeyFromMsg(msg, timelineType);
+function EntityManager(client) {
+    this.client = client;
 
-        self.timelineRepository.get(timelineKey, true, function (err, timeline) {
-            if (timeline) {
-                timeline = addToExistingTimeline(timeline, msgKey);
-            } else {
-                timeline = createNewTimeline(timelineKey, msgKey);
+    this.propertyChangedHandler = function(args) {
+        logger.debug("[EntityManager.propertyChangedHandler] propertyName: '%s', value: '%s'",
+                args.propertyName,
+                JSON.stringify(args.value));
+
+        var sender = args.sender;
+        if (sender instanceof User) {
+            
+            var repository = new UserRepository(client);
+
+            switch (args.propertyName) {
+                case 'paid_account' :
+                    repository.setPaidAccount(sender, args.value);
+                    break;
+                case 'visits' :
+                    repository.incrementPageVisits(sender);
+                    break;
+                case 'interest:add' :
+                    repository.addInterest(sender, args.value);
+                    break;
+                case 'interest:remove' :
+                    repository.removeInterest(sender, args.value);
+                    break;
+                default:
+                    logger.debug("[EntityManager.propertyChangedHandler] unknown propertyName: '%s'",
+                        propertyName);
             }
 
-            self.timelineRepository.save(timeline, callback);
-        });
-    }
-
-    this.generateKey = function (ownerUsername, timelineType, date) {
-        if (ownerUsername && timelineType && date) {
-            var dateString = date.toISOString().substring(0, 10);
-            return ownerUsername + "_" + timelineType + "_" + dateString;
-        } else {
-            throw new Error(
-                "ownerUsername: " + ownerUsername + ", " +
-                "timelineType: " + timelineType + ", " +
-                "date: " + date);
         }
-    }
-
-    this.generateKeyFromMsg = function (msg, timelineType) {
-        var owner = getOwner(msg, timelineType);
-        return this.generateKey(owner, timelineType, msg.created);
-    }
-
-    function addToExistingTimeline(timeline, msgKey) {
-        timeline.addMsg(msgKey);
-        return timeline;
-    }
-
-    function createNewTimeline(timelineKey, msgKey) {
-        var newTimeline = new Timeline(timelineKey);
-        newTimeline.addMsg(msgKey);
-        return newTimeline;
-    }
-
-    function getOwner(msg, timelineType) {
-        switch (timelineType)
-        {
-            case Timeline.TimelineType.Inbox:
-                return msg.recipient;
-            case Timeline.TimelineType.Sent:
-                return msg.sender;
-        }
-        return msg.recipient;
     }
 }
 
-TimelineManager.prototype.postMsg = function (msg, callback) {
-    var self = this;
-    self.msgRepository.save(msg, function (err, savedMsg) {
-        if (err) {
-            callback(err, null);
-        }
-        // Post to recipient's Inbox timeline
-        self.addToTimeline(msg, Timeline.TimelineType.Inbox, savedMsg.id, function (err, recipientRslt) {
-            if (err) {
-                callback(err, null);
-            }
-            // Post to sender's Sent timeline
-            self.addToTimeline(msg, Timeline.TimelineType.Sent, savedMsg.id, function (err, senderRslt) {
-                if (err) {
-                    callback(err, null);
-                } else {
-                    callback(null, [ recipientRslt, senderRslt ]);
-                }
-            });
-        });
-    });
+EntityManager.prototype.addModel = function (model) {
+    model.on('propertyChanged', this.propertyChangedHandler);
 };
 
-TimelineManager.prototype.getTimeline = function (ownerUsername, timelineType, date, callback) {
-    var timelineKey = this.generateKey(ownerUsername, timelineType, date);
-    this.timelineRepository.get(timelineKey, false, callback);
-}
+EntityManager.prototype.evictModel = function (model) {
+    model.removeListener('propertyChanged', this.propertyChangedHandler);
+};
 
-module.exports = TimelineManager;
+module.exports = EntityManager;
 

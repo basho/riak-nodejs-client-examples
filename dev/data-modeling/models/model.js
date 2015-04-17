@@ -1,12 +1,23 @@
 ﻿'use strict';
 
-var emitter = require('events').EventEmitter;
+var events = require('events');
+var logger = require('winston');
+var util = require('util');
 
 function Model() {
+    events.EventEmitter.call(this);
+
     this.propertyChanged = function (propertyName, value) {
-        emitter.emit('propertyChanged', propertyName, value);
+        var args = {
+            sender: this,
+            propertyName: propertyName,
+            value: value
+        };
+        this.emit('propertyChanged', args);
     };
 }
+
+util.inherits(Model, events.EventEmitter);
 
 /*
  * Used to create immutable Model objects
