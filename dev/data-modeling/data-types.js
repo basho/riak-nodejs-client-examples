@@ -39,6 +39,7 @@ function DevDataModelingDataTypes(done) {
         function (async_cb) {
             userRepo.save(joe, function (err, rslt) {
                 throwIfErr(err);
+                logger.debug("[DevDataModelingDataTypes] joe save rslt: '%s'", JSON.stringify(rslt));
                 logger.info("Joe.firstName: '%s'", rslt.firstName);
                 logger.info("Joe.lastName: '%s'", rslt.lastName);
                 logger.info("Joe.interests: '%s'", JSON.stringify(rslt.interests));
@@ -64,7 +65,9 @@ function DevDataModelingDataTypes(done) {
                 // display. This is for instructional purposes here and would not be
                 // done in production.
                 setTimeout(function () {
-                    userRepo.get(rslt.id, false, function (err, updated) {
+                    var bruce_id = rslt.key;
+                    logger.debug("[DevDataModelingDataTypes] bruce save rslt: '%s'", JSON.stringify(rslt));
+                    userRepo.get(bruce_id, false, function (err, updated) {
                         logger.info("[DevDataModelingDataTypes] bruce entity: '%s'", JSON.stringify(bruce));
                         logger.info("[DevDataModelingDataTypes] bruce in Riak: '%s'", JSON.stringify(updated));
                         async_cb();

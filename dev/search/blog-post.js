@@ -1,6 +1,6 @@
 'use strict';
 
-var Model = require('../../model');
+var Model = require('../model');
 var inherits = require('util').inherits;
 
 function BlogPost(title, author, content, keywords, datePosted, published) {
@@ -22,5 +22,5 @@ function BlogPost(title, author, content, keywords, datePosted, published) {
 
 inherits(BlogPost, Model);
 
-module.exports = User;
+module.exports = BlogPost;
 

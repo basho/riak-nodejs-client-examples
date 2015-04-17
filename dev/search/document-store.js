@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 var config = require('../../config');
 
@@ -12,7 +12,11 @@ var fs = require('fs');
 var https = require('https');
 var logger = require('winston');
 var path = require('path');
+
 var Riak = require('basho-riak-client');
+
+var BlogPost = require('./blog-post');
+var BlogPostRepository = require('./blog-post-repository');
 
 function maybeDownloadSchemaFile(callback) {
 
@@ -76,10 +80,30 @@ function DevSearchDocumentStore(done) {
             if (err) {
                 throw new Error(err);
             }
-            
-            done();
+
+            storeBlogPost();
         });
     };
+
+    function storeBlogPost() {
+        var post = new BlogPost(
+            'This one is so lulz!',
+            'Cat Stevens',
+            'Please check out these cat pics!',
+            [ 'adorbs', 'cheshire' ],
+            new Date(),
+            true
+        );
+
+        var repo = new BlogPostRepository(client, 'cat_pics_quarterly');
+
+        repo.save(post, function (err, rslt) {
+            logger.info("[DevSearchDocumentStore] key: '%s', model: '%s'",
+                rslt.key, JSON.stringify(rslt.model));
+            done();
+        });
+
+    }
 
 }
 

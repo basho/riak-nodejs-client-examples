@@ -1,144 +1,58 @@
-// <copyright file="BlogPostRepository.cs" company="Basho Technologies, Inc.">
-// Copyright (c) 2015 - Basho Technologies, Inc.
-//
-// This file is provided to you under the Apache License,
-// Version 2.0 (the "License"); you may not use this file
-// except in compliance with the License.  You may obtain
-// a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-// </copyright>
+'use strict';
 
-namespace RiakClientExamples.Dev.Search
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.Linq;
-    using System.Text;
-    using RiakClient;
-    using RiakClient.Messages;
-    using RiakClient.Models;
+var inherits = require('util').inherits;
+var logger = require('winston');
 
-    public class BlogPostRepository : Repository<BlogPost>
-    {
-        const string titleRegister = "title";
-        const string authorRegister = "author";
-        const string contentRegister = "content";
-        const string keywordsSet = "keywords";
-        const string datePostedRegister = "date";
-        const string publishedFlag = "published";
+var Riak = require('basho-riak-client');
 
-        private static readonly SerializeObjectToByteArray<string> Serializer =
-            s => Encoding.UTF8.GetBytes(s);
+var Repository = require('../repository');
+var BlogPost = require('./blog-post');
 
-        private readonly string bucketName;
-
-        public BlogPostRepository(IRiakClient client, string bucketName)
-            : base(client)
-        {
-            if (string.IsNullOrWhiteSpace(bucketName))
-            {
-                throw new ArgumentNullException("bucketName");
-            }
-
-            this.bucketName = bucketName;
-        }
-
-        public override string Save(BlogPost model)
-        {
-            var updates = new List<MapUpdate>();
-
-            updates.Add(new MapUpdate
-            {
-                register_op = Serializer(model.Title),
-                field = new MapField
-                {
-                    name = Serializer(titleRegister),
-                    type = MapField.MapFieldType.REGISTER
-                }
-            });
-
-            updates.Add(new MapUpdate
-            {
-                register_op = Serializer(model.Author),
-                field = new MapField
-                {
-                    name = Serializer(authorRegister),
-                    type = MapField.MapFieldType.REGISTER
-                }
-            });
-
-            updates.Add(new MapUpdate
-            {
-                register_op = Serializer(model.Content),
-                field = new MapField
-                {
-                    name = Serializer(contentRegister),
-                    type = MapField.MapFieldType.REGISTER
-                }
-            });
-
-            var keywordsSetOp = new SetOp();
-            keywordsSetOp.adds.AddRange(model.Keywords.Select(kw => Serializer(kw)));
-
-            updates.Add(new MapUpdate
-            {
-                set_op = keywordsSetOp,
-                field = new MapField
-                {
-                    name = Serializer(keywordsSet),
-                    type = MapField.MapFieldType.SET
-                }
-            });
-
-            string datePostedSolrFormatted =
-                model.DatePosted
-                    .ToUniversalTime()
-                    .ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-            updates.Add(new MapUpdate
-            {
-                register_op = Serializer(datePostedSolrFormatted),
-                field = new MapField
-                {
-                    name = Serializer(datePostedRegister),
-                    type = MapField.MapFieldType.REGISTER
-                }
-            });
-
-            updates.Add(new MapUpdate
-            {
-                flag_op = model.Published ?
-                    MapUpdate.FlagOp.ENABLE : MapUpdate.FlagOp.DISABLE,
-                field = new MapField
-                {
-                    name = Serializer(publishedFlag),
-                    type = MapField.MapFieldType.FLAG
-                }
-            });
-
-            var id = new RiakObjectId(BucketType, bucketName, null);
-
-            var rslt = client.DtFetchMap(id);
-            CheckResult(rslt.Result);
-
-            rslt = client.DtUpdateMap(id, Serializer, rslt.Context, null, updates, null);
-            CheckResult(rslt.Result);
-
-            RiakObject obj = rslt.Result.Value;
-            return obj.Key;
-        }
-
-        protected override string BucketType
-        {
-            get { return "cms"; }
-        }
-    }
+function BlogPostRepository(client, bucketName) {
+    Repository.call(this, client);
+    this.bucketType = 'cms';
+    this.bucketName = bucketName;
 }
+
+inherits(BlogPostRepository, Repository);
+
+BlogPostRepository.prototype.buildModel = function (rslt) {
+
+    var title = rslt.map.registers.title.toString('utf8');
+    var author = rslt.map.registers.author.toString('utf8');
+    var content = rslt.map.registers.content.toString('utf8');
+
+    var keywords = [];
+    rslt.map.sets.keywords.forEach(function (keyword) {
+        keywords.push(keyword);
+    });
+
+    var datePosted = Date.parse(rslt.map.registers.date_posted.toString('utf8'));
+    var published = rslt.map.flags.published;
+
+    return new BlogPost(
+        title, author, content, keywords, datePosted, published);
+};
+
+BlogPostRepository.prototype.getMapOperation = function (model) {
+
+    var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
+    mapOp.setRegister('title', model.title);
+
+    mapOp.setRegister('author', model.author);
+    mapOp.setRegister('content', model.content);
+
+    model.keywords.forEach(function (keyword) {
+        mapOp.addToSet('keywords', keyword);
+    });
+
+    mapOp.setRegister('date_posted', model.datePosted.toString());
+    mapOp.setFlag('published', model.published);
+
+    logger.debug("[BlogPostRepository.getMapOperation] mapOp: '%s'", JSON.stringify(mapOp));
+
+    return mapOp;
+};
+
+module.exports = BlogPostRepository;
+

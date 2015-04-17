@@ -33,9 +33,8 @@ function defineProperties(obj, data) {
 Model.prototype.getId = function () {
     if (this.hasOwnProperty('id')) {
         return this.id;
-    } else {
-        throw 'not implemented';
     }
+    // If a Model does not provide an ID, we must want Riak to generate it
 };
 
 Object.defineProperty(Model.prototype, "id", {
