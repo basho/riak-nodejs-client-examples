@@ -33,11 +33,11 @@ function EntityManager(client) {
                     break;
                 default:
                     logger.debug("[EntityManager.propertyChangedHandler] unknown propertyName: '%s'",
-                        propertyName);
+                        args.propertyName);
             }
 
         }
-    }
+    };
 }
 
 EntityManager.prototype.addModel = function (model) {

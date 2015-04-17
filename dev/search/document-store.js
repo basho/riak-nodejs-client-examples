@@ -83,7 +83,7 @@ function DevSearchDocumentStore(done) {
 
             storeBlogPost();
         });
-    };
+    }
 
     function storeBlogPost() {
         var post = new BlogPost(

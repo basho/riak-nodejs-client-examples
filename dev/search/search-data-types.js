@@ -87,6 +87,14 @@ function DevSearchDataTypes(done) {
                 function search_cb(err, rslt) {
                     logger.info("[DevSearchDataTypes] numFound: '%d', docs: '%s'",
                         rslt.numFound, JSON.stringify(rslt.docs));
+
+                    var doc = rslt.docs[0];
+                    /* jshint sub:true */
+                    var key = doc['_yz_rk'];
+                    var bucket = doc['_yz_rb'];
+                    var bucketType = doc['_yz_rt'];
+                    /* jshint sub:false */
+
                     done();
                 }
 
