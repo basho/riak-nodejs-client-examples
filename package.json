@@ -1,6 +1,6 @@
 {
   "name": "basho-docs-examples",
-  "description": "All examples from docs.basho.com for NodeJS",
+  "description": "All examples from docs.basho.com for Node.js",
   "version": "1.0.0",
   "author": "Luke Bakken <lbakken@basho.com>",
   "license": "Apache-2.0",

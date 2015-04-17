@@ -28,6 +28,8 @@ var DevAdvancedBucketTypes = require('./dev/advanced/bucket-types');
 
 var DevDataModelingDataTypes = require('./dev/data-modeling/data-types');
 
+var DevSearchDocumentStore = require('./dev/search/document-store');
+
 var examples = {
     TasteOfRiak: [ '               Taste Of Riak Intro', TasteOfRiakIntroduction],
     DevUsingBasics: [ '            Dev/Using/Basics', DevUsingBasics ],
@@ -36,7 +38,8 @@ var examples = {
     DevUsingConflictResolution: [ 'Dev/Using/Conflict-Resolution', DevUsingConflictResolution ],
     DevUsingDataTypes: [ '         Dev/Using/Data-Types', DevUsingDataTypes] ,
     DevAdvancedBucketTypes: [ '    Dev/Advanced/Bucket-Types', DevAdvancedBucketTypes ],
-    DevDataModelingDataTypes: [ '  Dev/Data-Modeling/Data-Types', DevDataModelingDataTypes ]
+    DevDataModelingDataTypes: [ '  Dev/Data-Modeling/Data-Types', DevDataModelingDataTypes ],
+    DevSearchDocumentStore: [ '    Dev/Search/Document-Store', DevSearchDocumentStore ]
 };
 
 function client_shutdown() {
