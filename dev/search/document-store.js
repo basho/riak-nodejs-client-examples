@@ -48,15 +48,8 @@ function throwIfErr(err) {
     }
 }
 
-function DevSearchDocumentStore(done) {
+function Init(done) {
     var client = config.createClient();
-
-    maybeDownloadSchemaFile(function (schemaFile) {
-        fs.readFile(schemaFile, function (err, data) {
-            throwIfErr(err);
-            storeSchemaInRiak(data.toString('utf8'));
-        });
-    });
 
     function storeSchemaInRiak(schemaXml) {
 
@@ -66,7 +59,6 @@ function DevSearchDocumentStore(done) {
         };
         client.storeSchema(options, function (err, rslt) {
             throwIfErr(err);
-
             createIndexInRiak();
         });
     }
@@ -77,13 +69,23 @@ function DevSearchDocumentStore(done) {
             indexName: 'blog_posts'
         };
         client.storeIndex(options, function (err, rslt) {
-            if (err) {
-                throw new Error(err);
-            }
-
-            storeBlogPost();
+            throwIfErr(err);
+            done();
         });
     }
+
+    maybeDownloadSchemaFile(function (schemaFile) {
+        fs.readFile(schemaFile, function (err, data) {
+            throwIfErr(err);
+            storeSchemaInRiak(data.toString('utf8'));
+        });
+    });
+}
+
+function DevSearchDocumentStore(done) {
+    var client = config.createClient();
+
+    storeBlogPost();
 
     function storeBlogPost() {
         var post = new BlogPost(
@@ -98,6 +100,10 @@ function DevSearchDocumentStore(done) {
         var repo = new BlogPostRepository(client, 'cat_pics_quarterly');
 
         repo.save(post, function (err, rslt) {
+            throwIfErr(err);
+
+            logger.debug("[DevSearchDocumentStore] rslt: '%s'", JSON.stringify(rslt));
+
             logger.info("[DevSearchDocumentStore] key: '%s', model: '%s'",
                 rslt.key, JSON.stringify(rslt.model));
 
@@ -129,4 +135,5 @@ function DevSearchDocumentStore(done) {
 }
 
 module.exports = DevSearchDocumentStore;
+module.exports.Init = Init;
 

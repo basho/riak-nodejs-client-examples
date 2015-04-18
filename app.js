@@ -40,7 +40,7 @@ var examples = {
     DevUsingDataTypes: [ '         Dev/Using/Data-Types', DevUsingDataTypes] ,
     DevAdvancedBucketTypes: [ '    Dev/Advanced/Bucket-Types', DevAdvancedBucketTypes ],
     DevDataModelingDataTypes: [ '  Dev/Data-Modeling/Data-Types', DevDataModelingDataTypes ],
-    DevSearchDocumentStore: [ '    Dev/Search/Document-Store', DevSearchDocumentStore ],
+    DevSearchDocumentStore: [ '    Dev/Search/Document-Store', DevSearchDocumentStore, DevSearchDocumentStore.Init ],
     DevSearchDataTypes: [ '        Dev/Search/Search-Data-Types', DevSearchDataTypes, DevSearchDataTypes.Init ]
 };
 
