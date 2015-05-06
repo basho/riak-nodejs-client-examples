@@ -31,6 +31,8 @@ var DevDataModelingDataTypes = require('./dev/data-modeling/data-types');
 var DevSearchDocumentStore = require('./dev/search/document-store');
 var DevSearchDataTypes = require('./dev/search/search-data-types');
 
+var GitHubIssue52 = require('./github/issue-52/example');
+
 var examples = {
     TasteOfRiak: [ '               Taste Of Riak Intro', TasteOfRiakIntroduction],
     DevUsingBasics: [ '            Dev/Using/Basics', DevUsingBasics ],
@@ -41,7 +43,8 @@ var examples = {
     DevAdvancedBucketTypes: [ '    Dev/Advanced/Bucket-Types', DevAdvancedBucketTypes ],
     DevDataModelingDataTypes: [ '  Dev/Data-Modeling/Data-Types', DevDataModelingDataTypes ],
     DevSearchDocumentStore: [ '    Dev/Search/Document-Store', DevSearchDocumentStore, DevSearchDocumentStore.Init ],
-    DevSearchDataTypes: [ '        Dev/Search/Search-Data-Types', DevSearchDataTypes, DevSearchDataTypes.Init ]
+    DevSearchDataTypes: [ '        Dev/Search/Search-Data-Types', DevSearchDataTypes, DevSearchDataTypes.Init ],
+    GitHubIssue52: [ '             GitHub/Issue/52', GitHubIssue52 ]
 };
 
 function client_shutdown() {
