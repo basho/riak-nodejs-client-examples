@@ -35,6 +35,9 @@ function GitHubIssue52(done) {
             var riakObj;
             if (rslt.isNotFound) {
                 var riakObj = new Riak.Commands.KV.RiakObject();
+                riakObj.setBucketType('github')
+                riakObj.setBucket('issues')
+                riakObj.setKey('52')
                 riakObj.setContentType('application/json');
                 riakObj.setValue(value);
                 riakObj.setUserMeta(userMeta);
@@ -47,10 +50,7 @@ function GitHubIssue52(done) {
                 riakObj.setValue(updatedValue);
             }
 
-            client.storeValue({
-                bucketType: 'github', bucket: 'issues', key: '52',
-                returnBody: true, value: riakObj
-            }, function (err, rslt) {
+            client.storeValue({ returnBody: true, value: riakObj }, function (err, rslt) {
                 logger.debug("store err: %s", JSON.stringify(err));
                 logger.debug("store rslt: %s", JSON.stringify(rslt));
                 done();
