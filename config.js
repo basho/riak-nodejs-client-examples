@@ -18,4 +18,3 @@ var createClient = function () {
 
 module.exports = Config;
 module.exports.createClient = createClient;
-
