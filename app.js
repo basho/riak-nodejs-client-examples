@@ -23,6 +23,7 @@ var DevUsingUpdates = require('./dev/using/updates');
 var DevUsing2i = require('./dev/using/2i');
 var DevUsingConflictResolution = require('./dev/using/conflict-resolution');
 var DevUsingDataTypes = require('./dev/using/data-types');
+var DevUsingSearch = require('./dev/using/search');
 
 var DevAdvancedBucketTypes = require('./dev/advanced/bucket-types');
 
@@ -36,17 +37,18 @@ var GitHubIssue77 = require('./github/issue-77/example');
 
 var examples = {
     TasteOfRiak: [ '               Taste Of Riak Intro', TasteOfRiakIntroduction],
-    DevUsingBasics: [ '            Dev/Using/Basics', DevUsingBasics ],
-    DevUsingUpdates: [ '           Dev/Using/Updates', DevUsingUpdates ],
-    DevUsing2i: [ '                Dev/Using/2i', DevUsing2i ],
-    DevUsingConflictResolution: [ 'Dev/Using/Conflict-Resolution', DevUsingConflictResolution ],
-    DevUsingDataTypes: [ '         Dev/Using/Data-Types', DevUsingDataTypes] ,
-    DevAdvancedBucketTypes: [ '    Dev/Advanced/Bucket-Types', DevAdvancedBucketTypes ],
-    DevDataModelingDataTypes: [ '  Dev/Data-Modeling/Data-Types', DevDataModelingDataTypes ],
-    DevSearchDocumentStore: [ '    Dev/Search/Document-Store', DevSearchDocumentStore, DevSearchDocumentStore.Init ],
-    DevSearchDataTypes: [ '        Dev/Search/Search-Data-Types', DevSearchDataTypes, DevSearchDataTypes.Init ],
-    GitHubIssue52: [ '             GitHub/Issue/52', GitHubIssue52 ],
-    GitHubIssue77: [ '             GitHub/Issue/77', GitHubIssue77 ],
+    DevUsingBasics: [ '            Dev/Using/Basics', DevUsingBasics],
+    DevUsingUpdates: [ '           Dev/Using/Updates', DevUsingUpdates],
+    DevUsing2i: [ '                Dev/Using/2i', DevUsing2i],
+    DevUsingConflictResolution: [ 'Dev/Using/Conflict-Resolution', DevUsingConflictResolution],
+    DevUsingDataTypes: [ '         Dev/Using/Data-Types', DevUsingDataTypes],
+    DevUsingSearch: [ '            Dev/Using/Search', DevUsingSearch],
+    DevAdvancedBucketTypes: [ '    Dev/Advanced/Bucket-Types', DevAdvancedBucketTypes],
+    DevDataModelingDataTypes: [ '  Dev/Data-Modeling/Data-Types', DevDataModelingDataTypes],
+    DevSearchDocumentStore: [ '    Dev/Search/Document-Store', DevSearchDocumentStore, DevSearchDocumentStore.Init],
+    DevSearchDataTypes: [ '        Dev/Search/Search-Data-Types', DevSearchDataTypes, DevSearchDataTypes.Init],
+    GitHubIssue52: [ '             GitHub/Issue/52', GitHubIssue52],
+    GitHubIssue77: [ '             GitHub/Issue/77', GitHubIssue77],
 };
 
 function client_shutdown() {
