@@ -24,12 +24,32 @@ function DevUsingSearch(done) {
             if (!rslt) {
                 logger.info("[DevUsingSearch] rslt === false");
             }
-            done();
+
+            store_bucket_properties();
         };
 
         var store = new Riak.Commands.YZ.StoreIndex.Builder()
             .withIndexName("famous")
+            .withSchemaName("_yz_default")
             .withCallback(storeIndex_cb)
+            .build();
+
+        client.execute(store);
+    }
+
+    function store_bucket_properties() {
+        var bucketProps_cb = function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            }
+
+            done();
+        };
+
+        var store = new Riak.Commands.KV.StoreBucketProps.Builder()
+            .withBucket("cats")
+            .withSearchIndex("famous")
+            .withCallback(bucketProps_cb)
             .build();
 
         client.execute(store);
