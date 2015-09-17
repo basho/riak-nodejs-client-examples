@@ -39,7 +39,6 @@ function DevUsing2i(done) {
     }
 
     function querying_indexes() {
-
         var cmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
             .withBucket('users')
             .withIndexName('twitter_bin')
