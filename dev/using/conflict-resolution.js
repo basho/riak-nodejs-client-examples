@@ -14,17 +14,33 @@ var logger = require('winston');
 var Riak = require('basho-riak-client');
 
 function DevUsingConflictResolution(done) {
-    var client = config.createClient();
+    var client = config.createClient(function (err, c) {
+        var f1 = function (async_cb) {
+            siblings_in_action('nickelodeon', read_siblings, async_cb);
+        };
 
-    siblings_in_action('nickelodeon', read_siblings);
+        var f2 = function (async_cb) {
+            siblings_in_action('nickelodeon2', resolve_choosing_first, async_cb);
+        };
 
-    siblings_in_action('nickelodeon2', resolve_choosing_first);
+        var f3 = function (async_cb) {
+            siblings_in_action('nickelodeon3', resolve_using_resolver, async_cb);
+        };
 
-    siblings_in_action('nickelodeon3', resolve_using_resolver);
+        async.parallel([f1, f2, f3], function (err, rslts) {
+            if (err) {
+                logger.error('[DevUsingConflictResolution] err: %s', err);
+            }
+            c.stop(function (err) {
+                if (err) {
+                    logger.error('[DevUsingConflictResolution] err: %s', err);
+                }
+                done();
+            });
+        });
+    });
 
-    done();
-
-    function siblings_in_action(bucket_name, next_step_func) {
+    function siblings_in_action(bucket_name, next_step_func, async_cb) {
         var obj1 = new Riak.Commands.KV.RiakObject();
         obj1.setContentType('text/plain');
         obj1.setBucketType('siblings_allowed');
@@ -42,9 +58,9 @@ function DevUsingConflictResolution(done) {
         var storeFuncs = [];
         [obj1, obj2].forEach(function (obj) {
             storeFuncs.push(
-                function (async_cb) {
+                function (acb) {
                     client.storeValue({ value: obj }, function (err, rslt) {
-                        async_cb(err, rslt);
+                        acb(err, rslt);
                     });
                 }
             );
@@ -54,11 +70,11 @@ function DevUsingConflictResolution(done) {
             if (err) {
                 throw new Error(err);
             }
-            next_step_func(bucket_name);
+            next_step_func(bucket_name, async_cb);
         });
     }
 
-    function read_siblings(bucket_name) {
+    function read_siblings(bucket_name, async_cb) {
         client.fetchValue({
             bucketType: 'siblings_allowed',
             bucket: bucket_name, key: 'best_character'
@@ -68,12 +84,11 @@ function DevUsingConflictResolution(done) {
             }
             logger.info("[DevUsingConflictRes] %s/best_character has '%d' siblings",
                 bucket_name, rslt.values.length);
-
-            resolve_siblings(bucket_name);
+            resolve_siblings(bucket_name, async_cb);
         });
     }
 
-    function resolve_siblings(bucket_name) {
+    function resolve_siblings(bucket_name, async_cb) {
         client.fetchValue({
             bucketType: 'siblings_allowed',
             bucket: bucket_name, key: 'best_character'
@@ -89,13 +104,13 @@ function DevUsingConflictResolution(done) {
                     if (err) {
                         throw new Error(err);
                     }
-
                     assert(rslt.values.length === 1);
+                    async_cb();
                 });
         });
     }
 
-    function resolve_choosing_first(bucket_name) {
+    function resolve_choosing_first(bucket_name, async_cb) {
         client.fetchValue({
             bucketType: 'siblings_allowed',
             bucket: bucket_name, key: 'best_character'
@@ -112,11 +127,12 @@ function DevUsingConflictResolution(done) {
                     }
 
                     assert(rslt.values.length === 1);
+                    async_cb();
                 });
         });
     }
 
-    function resolve_using_resolver(bucket_name) {
+    function resolve_using_resolver(bucket_name, async_cb) {
         
         function conflict_resolver(objects) {
             /*
@@ -148,10 +164,10 @@ function DevUsingConflictResolution(done) {
                     }
 
                     assert(rslt.values.length === 1);
+                    async_cb();
                 });
         });
     }
 }
 
 module.exports = DevUsingConflictResolution;
-

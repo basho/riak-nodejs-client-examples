@@ -18,44 +18,86 @@ function throwIfErr(err) {
 }
 
 function waitForSearch(nextFunc) {
-    setTimeout(nextFunc, 1250);
+    setTimeout(nextFunc, 2000);
 }
 
 function Init(done) {
-    var client = config.createClient();
+    config.createClient(function (err, client) {
+        throwIfErr(err);
 
-    var indexFuncs = [];
-    ['scores', 'hobbies', 'customers'].forEach(function (idxName) {
-        indexFuncs.push(function (async_cb) {
-            var options = {
-                schemaName: '_yz_default',
-                indexName: idxName
-            };
-            client.storeIndex(options, function (err, rslt) {
-                throwIfErr(err);
-                async_cb();
+        var indexFuncs = [];
+        ['scores', 'hobbies', 'customers'].forEach(function (idxName) {
+            indexFuncs.push(function (async_cb) {
+                var options = {
+                    schemaName: '_yz_default',
+                    indexName: idxName
+                };
+                client.storeIndex(options, function (err, rslt) {
+                    async_cb(err);
+                });
             });
         });
-    });
 
-    async.parallel(indexFuncs, function (err, rslts) {
-        throwIfErr(err);
-        done();
+        async.waterfall(indexFuncs, function (err, rslts) {
+            throwIfErr(err);
+            var f1 = function (async_cb) {
+                var cmd = new Riak.Commands.KV.StoreBucketTypeProps.Builder()
+                    .withBucketType('counters')
+                    .withSearchIndex('scores')
+                    .withCallback(async_cb)
+                    .build();
+                client.execute(cmd);
+            };
+
+            var f2 = function (async_cb) {
+                var cmd = new Riak.Commands.KV.StoreBucketTypeProps.Builder()
+                    .withBucketType('sets')
+                    .withSearchIndex('hobbies')
+                    .withCallback(async_cb)
+                    .build();
+                client.execute(cmd);
+            };
+
+            var f3 = function (async_cb) {
+                var cmd = new Riak.Commands.KV.StoreBucketTypeProps.Builder()
+                    .withBucketType('maps')
+                    .withSearchIndex('customers')
+                    .withCallback(async_cb)
+                    .build();
+                client.execute(cmd);
+            };
+
+            async.parallel([f1, f2, f3], function (err, rslts) {
+                if (err) {
+                    logger.error('[DevSearchDataTypes|Init] err: %s', err);
+                }
+                client.stop(function (err) {
+                    if (err) {
+                        logger.error('[DevSearchDataTypes|Init] err: %s', err);
+                    }
+                    done();
+                });
+            });
+        });
     });
 }
 
 function DevSearchDataTypes(done) {
-    var client = config.createClient();
+    var client = config.createClient(function (e, c) {
+        throwIfErr(e);
 
-    async.parallel([
-            counterExample,
-            setExample,
-            mapExample
-        ], function (err, rslts) {
-            throwIfErr(err);
-            done();
-        }
-    );
+        async.parallel([
+                counterExample,
+                setExample,
+                mapExample
+            ], function (err, rslts) {
+                throwIfErr(err);
+                c.stop(function (err) {
+                    throwIfErr(err);
+                    done();
+                });
+            });
+    });
 
     function counterExample(counterExampleDone) {
         var funcs = [
@@ -375,4 +417,3 @@ function DevSearchDataTypes(done) {
 
 module.exports = DevSearchDataTypes;
 module.exports.Init = Init;
-

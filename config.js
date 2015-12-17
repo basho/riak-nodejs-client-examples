@@ -8,13 +8,15 @@ var Riak = require('basho-riak-client');
 // installation packages:
 //
 // var riakNodes = [ 'localhost:8087' ];
-var riakNodes = [ 'riak-test:10017', 'riak-test:10027', 'riak-test:10037', 'riak-test:10047' ];
+// var riakNodes = [ 'riak-test:10017', 'riak-test:10027', 'riak-test:10037', 'riak-test:10047' ];
+var riakNodes = [ 'riak-test:10017' ];
 
 function Config() { }
 
-var createClient = function () {
-    return new Riak.Client(riakNodes);
+var createClient = function (cb) {
+    return new Riak.Client(riakNodes, cb);
 };
 
 module.exports = Config;
 module.exports.createClient = createClient;
+module.exports.riakNodes = riakNodes;

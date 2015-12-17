@@ -4,7 +4,7 @@ var config = require('../../config');
 
 /*
  * Code samples from:
- * http://docs.basho.com/riak/latest/dev/using/data-types/
+ * http://docs.basho.com/riak/latest/dev/using/search/
  */
 
 var assert = require('assert');
@@ -13,9 +13,9 @@ var logger = require('winston');
 var Riak = require('basho-riak-client');
 
 function DevUsingSearch(done) {
-    var client = config.createClient();
-
-    create_famous_index();
+    var client = config.createClient(function (err, c) {
+        create_famous_index();
+    });
 
     function create_famous_index() {
         var storeIndex_cb = function (err, rslt) {
@@ -23,10 +23,13 @@ function DevUsingSearch(done) {
                 throw new Error(err);
             }
             if (rslt === true) {
+                logger.info("[DevUsingSearch] famous index created with _yz_default schema.");
                 store_bucket_properties();
             } else {
                 logger.error("[DevUsingSearch] StoreIndex false result!");
-                done();
+                client.stop(function () {
+                    done();
+                });
             }
         };
 
@@ -45,14 +48,18 @@ function DevUsingSearch(done) {
                 throw new Error(err);
             }
             if (rslt === true) {
+                logger.info("[DevUsingSearch] cats bucket associated with famous index.");
                 store_objects();
             } else {
                 logger.error("[DevUsingSearch] StoreBucketProps false result!");
-                done();
+                client.stop(function () {
+                    done();
+                });
             }
         };
 
         var store = new Riak.Commands.KV.StoreBucketProps.Builder()
+            .withBucketType("animals")
             .withBucket("cats")
             .withSearchIndex("famous")
             .withCallback(bucketProps_cb)
@@ -100,11 +107,14 @@ function DevUsingSearch(done) {
                 throw new Error(err);
             }
             // NB: wait to let Solr index docs
+            logger.info("[DevUsingSearch] four objects stored in cats bucket and indexing.");
             setTimeout(do_search_request, 1250);
         });
     }
 
     function do_search_request() {
+        logger.info("[DevUsingSearch] indexing complete, searching for objects.");
+
         function search_cb(err, rslt) {
             if (err) {
                 throw new Error(err);
@@ -200,7 +210,9 @@ function DevUsingSearch(done) {
             if (rslt !== true) {
                 logger.error("[DevUsingSearch] DeleteIndex false result!");
             }
-            done();
+            client.stop(function () {
+                done();
+            });
         }
 
         var bucketProps_cb = function (err, rslt) {
@@ -215,12 +227,15 @@ function DevUsingSearch(done) {
                 client.execute(deleteCmd);
             } else {
                 logger.error("[DevUsingSearch] StoreBucketProps false result!");
-                done();
+                client.stop(function () {
+                    done();
+                });
             }
         };
 
-        var store = new Riak.Commands.KV.StoreBucketTypeProps.Builder()
+        var store = new Riak.Commands.KV.StoreBucketProps.Builder()
             .withBucketType("animals")
+            .withBucket("cats")
             .withSearchIndex("_dont_index_")
             .withCallback(bucketProps_cb)
             .build();

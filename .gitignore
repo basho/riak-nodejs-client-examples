@@ -9,6 +9,7 @@ tags
 *.tgz
 *.log
 blog_post_schema.xml
+*.out
 
 # Runtime data
 pids

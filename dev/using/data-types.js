@@ -14,17 +14,30 @@ var logger = require('winston');
 var Riak = require('basho-riak-client');
 
 function DevUsingDataTypes(done) {
-    var client = config.createClient();
+    var client = config.createClient(function (err, c) {
+        if (err) {
+            throw new Error(err);
+        }
 
-    counter_examples();
+        var funcs = [
+            counter_examples,
+            set_examples,
+            map_examples
+        ];
+        async.parallel(funcs, function (err, rslts) {
+            if (err) {
+                logger.error('[DevUsingDataTypes] err: %s', err);
+            }
+            c.stop(function (err) {
+                if (err) {
+                    logger.error('[DevUsingDataTypes] err: %s', err);
+                }
+                done();
+            });
+        });
+    });
 
-    set_examples();
-
-    map_examples();
-
-    done();
-
-    function set_examples() {
+    function set_examples(async_cb) {
         var options = {
             bucketType: 'sets',
             bucket: 'travel',
@@ -38,11 +51,11 @@ function DevUsingDataTypes(done) {
             if (rslt.notFound) {
                 logger.info("[DevUsingDataTypes] set 'cities' is not found!");
             }
-            add_to_cities_set();
+            add_to_cities_set(async_cb);
         });
     }
 
-    function add_to_cities_set() {
+    function add_to_cities_set(async_cb) {
         var options = {
             bucketType: 'sets',
             bucket: 'travel',
@@ -59,14 +72,14 @@ function DevUsingDataTypes(done) {
                         throw new Error(err);
                     }
 
-                    change_cities_set();
+                    change_cities_set(async_cb);
                 }
             )
             .build();
         client.execute(cmd);
     }
 
-    function change_cities_set() {
+    function change_cities_set(async_cb) {
         var options = {
             bucketType: 'sets',
             bucket: 'travel',
@@ -86,20 +99,19 @@ function DevUsingDataTypes(done) {
                 if (err) {
                     throw new Error(err);
                 }
-
                 client.fetchSet(options, function(err, rslt) {
                     if (err) {
                         throw new Error(err);
                     }
-
                     logger.info("[DevUsingDataTypes] cities set values: '%s'",
                         rslt.values.join(', '));
+                    async_cb();
                 });
             });
         });
     }
 
-    function counter_examples() {
+    function counter_examples(async_cb) {
         var options = {
             bucketType: 'counters',
             bucket: 'counter',
@@ -108,7 +120,9 @@ function DevUsingDataTypes(done) {
         create_or_update_counter(options, 1, function(opt1) {
             display_counter(opt1, function(opt2) {
                 create_or_update_counter(opt2, -1, function(opt3) {
-                    display_counter(opt3);
+                    display_counter(opt3, function(opts) {
+                        async_cb();
+                    });
                 });
             });
         });
@@ -151,7 +165,7 @@ function DevUsingDataTypes(done) {
         );
     }
 
-    function map_examples() {
+    function map_examples(async_cb) {
 
         var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
         mapOp.setRegister('first_name', 'Ahmed');
@@ -168,8 +182,7 @@ function DevUsingDataTypes(done) {
             if (err) {
                 throw new Error(err);
             }
-            
-            flags_within_maps();
+            flags_within_maps(async_cb);
         });
     }
 
@@ -193,7 +206,7 @@ function DevUsingDataTypes(done) {
         });
     }
 
-    function flags_within_maps() {
+    function flags_within_maps(async_cb) {
         var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
         mapOp.setFlag('enterprise_customer', false);
 
@@ -208,12 +221,11 @@ function DevUsingDataTypes(done) {
             if (err) {
                 throw new Error(err);
             }
-
-            counters_within_maps();
+            counters_within_maps(async_cb);
         });
     }
 
-    function counters_within_maps() {
+    function counters_within_maps(async_cb) {
         var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
         mapOp.incrementCounter('page_visits', 1);
 
@@ -228,12 +240,11 @@ function DevUsingDataTypes(done) {
             if (err) {
                 throw new Error(err);
             }
-
-            sets_within_maps();
+            sets_within_maps(async_cb);
         });
     }
 
-    function sets_within_maps() {
+    function sets_within_maps(async_cb) {
         var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
         mapOp.addToSet('interests', 'robots');
         mapOp.addToSet('interests', 'opera');
@@ -250,12 +261,11 @@ function DevUsingDataTypes(done) {
             if (err) {
                 throw new Error(err);
             }
-
-            verify_interests_set();
+            verify_interests_set(async_cb);
         });
     }
 
-    function verify_interests_set() {
+    function verify_interests_set(async_cb) {
         var options = {
             bucketType: 'maps',
             bucket: 'customers',
@@ -271,11 +281,11 @@ function DevUsingDataTypes(done) {
             assert(rslt.map.sets['interests'].indexOf('robots') !== -1);
             /* jshint sub:false */
 
-            update_interests_set();
+            update_interests_set(async_cb);
         });
     }
 
-    function update_interests_set() {
+    function update_interests_set(async_cb) {
         var options = {
             bucketType: 'maps',
             bucket: 'customers',
@@ -299,12 +309,12 @@ function DevUsingDataTypes(done) {
                     throw new Error(err);
                 }
 
-                maps_within_maps();
+                maps_within_maps(async_cb);
             });
         });
     }
 
-    function maps_within_maps() {
+    function maps_within_maps(async_cb) {
         var options = {
             bucketType: 'maps',
             bucket: 'customers',
@@ -324,11 +334,11 @@ function DevUsingDataTypes(done) {
                 throw new Error(err);
             }
 
-            examine_map_register();
+            examine_map_register(async_cb);
         });
     }
 
-    function examine_map_register() {
+    function examine_map_register(async_cb) {
         var options = {
             bucketType: 'maps',
             bucket: 'customers',
@@ -346,11 +356,11 @@ function DevUsingDataTypes(done) {
             logger.info("[DevUsingDataTypes] Annika's first name is '%s'",
                 first_name_register.toString('utf8'));
 
-            remove_register_from_inner_map(options, rslt);
+            remove_register_from_inner_map(async_cb);
         });
     }
 
-    function remove_register_from_inner_map() {
+    function remove_register_from_inner_map(async_cb) {
         var options = {
             bucketType: 'maps',
             bucket: 'customers',
@@ -378,12 +388,12 @@ function DevUsingDataTypes(done) {
                     throw new Error(err);
                 }
 
-                subscribe_annika_to_plans();
+                subscribe_annika_to_plans(async_cb);
             });
         });
     }
 
-    function subscribe_annika_to_plans() {
+    function subscribe_annika_to_plans(async_cb) {
         var options = {
             bucketType: 'maps',
             bucket: 'customers',
@@ -414,12 +424,12 @@ function DevUsingDataTypes(done) {
                     throw new Error(err);
                 }
 
-                retrieve_annika_plans();
+                retrieve_annika_plans(async_cb);
             });
         });
     }
 
-    function retrieve_annika_plans() {
+    function retrieve_annika_plans(async_cb) {
         var options = {
             bucketType: 'maps',
             bucket: 'customers',
@@ -437,11 +447,11 @@ function DevUsingDataTypes(done) {
             logger.info("[DevUsingDataTypes] Annika enterprise plan '%s'",
                 enterprisePlan);
 
-            add_counter_to_inner_map();
+            add_counter_to_inner_map(async_cb);
         });
     }
 
-    function add_counter_to_inner_map() {
+    function add_counter_to_inner_map(async_cb) {
         var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
         mapOp.map('annika_info').incrementCounter('widget_purchases', 1);
 
@@ -457,11 +467,11 @@ function DevUsingDataTypes(done) {
                 throw new Error(err);
             }
 
-            store_annikas_interest();
+            store_annikas_interest(async_cb);
         });
     }
     
-    function store_annikas_interest() {
+    function store_annikas_interest(async_cb) {
         var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
         var annika_map = mapOp.map('annika_info');
         annika_map.addToSet('interests', 'tango dancing');
@@ -478,11 +488,11 @@ function DevUsingDataTypes(done) {
                 throw new Error(err);
             }
 
-            remove_annikas_interest();
+            remove_annikas_interest(async_cb);
         });
     }
 
-    function remove_annikas_interest() {
+    function remove_annikas_interest(async_cb) {
         var options = {
             bucketType: 'maps',
             bucket: 'customers',
@@ -507,12 +517,12 @@ function DevUsingDataTypes(done) {
                     throw new Error(err);
                 }
 
-                store_annikas_purchase_info();
+                store_annikas_purchase_info(async_cb);
             });
         });
     }
 
-    function store_annikas_purchase_info() {
+    function store_annikas_purchase_info(async_cb) {
         var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
         var annika_map = mapOp.map('annika_info');
         var annika_purchase_map = annika_map.map('purchase');
@@ -532,11 +542,11 @@ function DevUsingDataTypes(done) {
                 throw new Error(err);
             }
 
-            fetch_and_display_context();
+            fetch_and_display_context(async_cb);
         });
     }
 
-    function fetch_and_display_context() {
+    function fetch_and_display_context(async_cb) {
         var options = {
             bucketType: 'maps',
             bucket: 'customers',
@@ -550,6 +560,8 @@ function DevUsingDataTypes(done) {
 
             logger.info("[DevUsingDataTypes] context: '%s'",
                 rslt.context.toString('base64'));
+
+            async_cb();
         });
     }
 }

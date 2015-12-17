@@ -12,9 +12,12 @@ var logger = require('winston');
 var Riak = require('basho-riak-client');
 
 function DevUsingUpdates(done) {
-    var client = config.createClient();
-
-    put_coach();
+    var client = config.createClient(function (err, c) {
+        if (err) {
+            logger.error('[DevUsingUpdates] err: %s', err);
+        }
+        put_coach();
+    });
 
     function put_coach() {
         var riakObj = new Riak.Commands.KV.RiakObject();
@@ -47,7 +50,12 @@ function DevUsingUpdates(done) {
                 if (err) {
                     throw new Error(err);
                 }
-                done(err, rslt);
+                client.stop(function (err) {
+                    if (err) {
+                        logger.error('[DevUsingUpdates] err: %s', err);
+                    }
+                    done(err, rslt);
+                });
             });
         });
     }

@@ -13,17 +13,20 @@ var logger = require('winston');
 var Riak = require('basho-riak-client');
 
 function TasteOfRiakIntroduction(done) {
-    var client = config.createClient();
-
-    client.ping(function (err, rslt) {
-        if (err) {
-            throw new Error(err);
-        } else {
-            // On success, ping returns true
-            assert(rslt === true);
-            logger.info('[TasteOfRiakIntro] ping is successful');
-            save_people();
+    var client = config.createClient(function (e, c) {
+        if (e) {
+            throw new Error(e);
         }
+        client.ping(function (err, rslt) {
+            if (err) {
+                throw new Error(err);
+            } else {
+                // On success, ping returns true
+                assert(rslt === true);
+                logger.info('[TasteOfRiakIntro] ping is successful');
+                save_people();
+            }
+        });
     });
 
     function save_people() {
@@ -105,10 +108,14 @@ function TasteOfRiakIntroduction(done) {
             } else {
                 logger.info('[TasteOfRiakIntro] john doe deleted from Riak');
             }
-            done(err, rslt);
+            client.stop(function (err) {
+                if (err) {
+                    logger.error('[TasteOfRiakIntro] err: %s', err);
+                }
+                done(err, rslt);
+            });
         });
     }
 }
 
 module.exports = TasteOfRiakIntroduction;
-

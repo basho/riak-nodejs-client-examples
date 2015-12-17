@@ -17,7 +17,6 @@ function BlogPostRepository(client, bucketName) {
 inherits(BlogPostRepository, Repository);
 
 BlogPostRepository.prototype.buildModel = function (rslt) {
-
     var title = rslt.map.registers.title.toString('utf8');
     var author = rslt.map.registers.author.toString('utf8');
     var content = rslt.map.registers.content.toString('utf8');
@@ -35,7 +34,6 @@ BlogPostRepository.prototype.buildModel = function (rslt) {
 };
 
 BlogPostRepository.prototype.getMapOperation = function (model) {
-
     var mapOp = new Riak.Commands.CRDT.UpdateMap.MapOperation();
     mapOp.setRegister('title', model.title);
 
@@ -55,4 +53,3 @@ BlogPostRepository.prototype.getMapOperation = function (model) {
 };
 
 module.exports = BlogPostRepository;
-
