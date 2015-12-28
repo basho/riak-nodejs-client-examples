@@ -13,17 +13,29 @@ var logger = require('winston');
 var Riak = require('basho-riak-client');
 
 function DevAdvancedBucketTypes(done) {
-    var client = config.createClient();
+    var client = config.createClient(function (err, c) {
+        if (err) {
+            throw new Error(err);
+        }
+        var funcs = [
+            default_type_example,
+            client_usage_example,
+            memes_example
+        ];
+        async.parallel(funcs, function (err, rslts) {
+            if (err) {
+                throw new Error(err);
+            }
+            c.stop(function (err) {
+                if (err) {
+                    logger.error('[DevAdvancedBucketTypes] err: %s', err);
+                }
+                done();
+            });
+        });
+    });
 
-    default_type_example();
-
-    client_usage_example();
-
-    memes_example();
-
-    done();
-
-    function default_type_example() {
+    function default_type_example(async_cb) {
         var obj1 = new Riak.Commands.KV.RiakObject();
         obj1.setContentType('text/plain');
         obj1.setBucketType('default');
@@ -45,11 +57,12 @@ function DevAdvancedBucketTypes(done) {
                 assert(obj1.value == obj2.value);
                 logger.info("[DevAdvancedBucketTypes] obj1 val: '%s', obj2 val: '%s'",
                     obj1.value.toString('utf8'), obj2.value.toString('utf8'));
+                async_cb();
             });
         });
     }
 
-    function client_usage_example() {
+    function client_usage_example(async_cb) {
         var obj = { name: 'Bob' };
         client.storeValue({
             bucketType: 'no_siblings', bucket: 'sensitive_user_data', key: 'user19735',
@@ -58,10 +71,11 @@ function DevAdvancedBucketTypes(done) {
             if (err) {
                 throw new Error(err);
             }
+            async_cb();
         });
     }
 
-    function memes_example() {
+    function memes_example(async_cb) {
         var obj = new Riak.Commands.KV.RiakObject();
         obj.setContentType('text/plain');
         obj.setBucketType('no_siblings');
@@ -72,9 +86,9 @@ function DevAdvancedBucketTypes(done) {
             if (err) {
                 throw new Error(err);
             }
+            async_cb();
         });
     }
 }
 
 module.exports = DevAdvancedBucketTypes;
-

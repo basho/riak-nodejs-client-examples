@@ -23,4 +23,3 @@ function BlogPost(title, author, content, keywords, datePosted, published) {
 inherits(BlogPost, Model);
 
 module.exports = BlogPost;
-

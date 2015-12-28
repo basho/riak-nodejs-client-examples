@@ -12,21 +12,28 @@ var logger = require('winston');
 var Riak = require('basho-riak-client');
 
 function DevUsingBasics(done) {
-    var client = config.createClient();
+    var client = config.createClient(function (err, c) {
+        var funcs = [
+            read_rufus,
+            put_oscar_wilde,
+            causal_context,
+            store_dodge_viper,
+            riak_generated_key,
+            fetch_bucket_props
+        ];
+        async.parallel(funcs, function (err, rslt) {
+            if (err) {
+                logger.error("[DevUsingBasics] err: %s", err);
+            }
+            c.stop(function () {
+                done();
+            });
+        });
+    });
 
-    read_rufus();
+    var rufus_rvalue = null;
 
-    put_oscar_wilde();
-
-    causal_context();
-
-    store_dodge_viper();
-
-    riak_generated_key();
-
-    fetch_bucket_props();
-
-    function put_rufus() {
+    function put_rufus(async_cb) {
         var riakObj = new Riak.Commands.KV.RiakObject();
         riakObj.setContentType('text/plain');
         riakObj.setValue('WOOF!');
@@ -37,11 +44,12 @@ function DevUsingBasics(done) {
             if (err) {
                 throw new Error(err);
             }
-            read_rufus(3);
+            rufus_rvalue = 3;
+            read_rufus(async_cb);
         });
     }
 
-    function put_oscar_wilde() {
+    function put_oscar_wilde(async_cb) {
         var riakObj = new Riak.Commands.KV.RiakObject();
         riakObj.setContentType('text/plain');
         riakObj.setValue('I have nothing to declare but my genius');
@@ -52,15 +60,16 @@ function DevUsingBasics(done) {
             if (err) {
                 throw new Error(err);
             }
+            async_cb();
         });
     }
 
-    function read_rufus(rvalue) {
+    function read_rufus(async_cb) {
         var fetchOptions = {
             bucketType: 'animals', bucket: 'dogs', key: 'rufus'
         };
-        if (rvalue) {
-            fetchOptions.r = rvalue;
+        if (rufus_rvalue) {
+            fetchOptions.r = rufus_rvalue;
         }
         client.fetchValue(fetchOptions, function (err, rslt) {
             if (err) {
@@ -68,16 +77,17 @@ function DevUsingBasics(done) {
             }
             if (rslt.isNotFound) {
                 logger.info("[DevUsingBasics] read_rufus: isNotFound %s", rslt.isNotFound);
-                put_rufus();
+                put_rufus(async_cb);
             } else {
                 var riakObj = rslt.values.shift();
                 var rufusValue = riakObj.value.toString("utf8");
                 logger.info("[DevUsingBasics] read_rufus: %s", rufusValue);
+                async_cb();
             }
         });
     }
 
-    function causal_context() {
+    function causal_context(async_cb) {
         var riakObj = new Riak.Commands.KV.RiakObject();
         riakObj.setContentType('text/plain');
         riakObj.setValue('Washington Generals');
@@ -106,12 +116,13 @@ function DevUsingBasics(done) {
                     }
                     var updatedObj = rslt.values.shift();
                     logger.info("[DevUsingBasics] champion: %s", updatedObj.value.toString('utf8'));
+                    async_cb();
                 });
             });
         });
     }
 
-    function store_dodge_viper() {
+    function store_dodge_viper(async_cb) {
         var riakObj = new Riak.Commands.KV.RiakObject();
         riakObj.setContentType('text/plain');
         riakObj.setValue('vroom');
@@ -127,10 +138,11 @@ function DevUsingBasics(done) {
             var riakObj = rslt.values.shift();
             var viper = riakObj.value;
             logger.info("[DevUsingBasics] dodge viper: %s", viper.toString('utf8'));
+            async_cb();
         });
     }
 
-    function riak_generated_key() {
+    function riak_generated_key(async_cb) {
         var user = {
             user: 'data'
         };
@@ -154,11 +166,12 @@ function DevUsingBasics(done) {
                 if (err) {
                     throw new Error(err);
                 }
+                async_cb();
             });
         });
     }
 
-    function fetch_bucket_props() {
+    function fetch_bucket_props(async_cb) {
         client.fetchBucketProps({
             bucketType: 'n_val_of_5', bucket: 'any_bucket_name'
         }, function (err, rslt) {
@@ -166,10 +179,9 @@ function DevUsingBasics(done) {
                 throw new Error(err);
             }
             logger.info("[DevUsingBasics] props: %s", JSON.stringify(rslt));
-            done(err, rslt);
+            async_cb();
         });
     }
 }
 
 module.exports = DevUsingBasics;
-

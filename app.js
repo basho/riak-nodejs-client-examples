@@ -48,17 +48,8 @@ var examples = {
     DevSearchDocumentStore: [ '    Dev/Search/Document-Store', DevSearchDocumentStore, DevSearchDocumentStore.Init],
     DevSearchDataTypes: [ '        Dev/Search/Search-Data-Types', DevSearchDataTypes, DevSearchDataTypes.Init],
     GitHubIssue52: [ '             GitHub/Issue/52', GitHubIssue52],
-    GitHubIssue77: [ '             GitHub/Issue/77', GitHubIssue77],
+    GitHubIssue77: [ '             GitHub/Issue/77', GitHubIssue77]
 };
-
-function client_shutdown() {
-    var client = config.createClient();
-    client.shutdown(function (state) {
-        if (state === Riak.Cluster.State.SHUTDOWN) {
-            process.exit();
-        }
-    });
-}
 
 function usage() {
     console.log('Argument                     Docs Page');
@@ -98,9 +89,8 @@ if (argv.usage) {
 
 function maybeRunExampleInit(example, doneFunc) {
     var exName = example[0].trim();
-    logger.debug("maybe running init for '%s'", exName);
     if (example.length === 3) {
-        logger.debug("running init for '%s'", exName);
+        logger.info("running init for '%s'", exName);
         var initFunc = example[2];
         initFunc(doneFunc);
     } else {
@@ -117,8 +107,11 @@ function executeExample(example, doneFunc) {
     });
 }
 
+var example_found = false;
+
 if (argv.init) {
     logger.info("Init ALL examples!");
+    example_found = true;
     var funcs = [];
     Object.keys(examples).forEach(function (ex) {
         var async_runner = function (async_cb) {
@@ -130,12 +123,13 @@ if (argv.init) {
         if (err) {
             logger.err("error: '%s'", err);
         }
-        client_shutdown();
+        process.exit();
     });
 }
 
 if (argv.all) {
     logger.info("Running ALL examples!");
+    example_found = true;
     var funcs = [];
     Object.keys(examples).forEach(function (ex) {
         var async_runner = function (async_cb) {
@@ -147,18 +141,17 @@ if (argv.all) {
         if (err) {
             logger.err("error: '%s'", err);
         }
-        client_shutdown();
+        process.exit();
     });
 }
 
-var example_found = false;
 Object.keys(argv).forEach(function (arg) {
     if (examples[arg]) {
         example_found = true;
         var exFunc = examples[arg][1];
         logger.info("Running '%s'", arg);
         executeExample(examples[arg], function (err, rslt) {
-            client_shutdown();
+            process.exit();
         });
     }
 });
@@ -166,4 +159,3 @@ Object.keys(argv).forEach(function (arg) {
 if (! example_found) {
     usage();
 }
-

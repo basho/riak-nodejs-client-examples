@@ -11,18 +11,20 @@ var async = require('async');
 var logger = require('winston');
 var Riak = require('basho-riak-client');
 
+var client = null;
+
 function DevUsing2i(done) {
-    var client = config.createClient();
+    config.createClient(function (err, c) {
+        client = c;
+        inserting_objects(function () {
+            indexing_objects(done);
+        });
+    });
 
-    inserting_objects();
-
-    indexing_objects();
-
-    done();
-
-    function inserting_objects() {
+    function inserting_objects(done_cb) {
         var riakObj = new Riak.Commands.KV.RiakObject();
         riakObj.setContentType('text/plain');
+        riakObj.setBucketType('indexes');
         riakObj.setBucket('users');
         riakObj.setKey('john_smith');
         riakObj.setValue('...user data...');
@@ -32,14 +34,15 @@ function DevUsing2i(done) {
             if (err) {
                 throw new Error(err);
             }
-
             logger.info('[DevUsing2i] Stored john_smith with index data');
             querying_indexes();
+            done_cb();
         });
     }
 
     function querying_indexes() {
         var cmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
+            .withBucketType('indexes')
             .withBucket('users')
             .withIndexName('twitter_bin')
             .withIndexKey('jsmith123')
@@ -48,7 +51,7 @@ function DevUsing2i(done) {
         client.execute(cmd);
     }
 
-    function indexing_objects() {
+    function indexing_objects(done_cb) {
 
         function store_cb(err, rslt, async_cb) {
             if (err) {
@@ -123,16 +126,27 @@ function DevUsing2i(done) {
             if (err) {
                 throw new Error(err);
             }
-            invalid_field_names();
-            incorrect_data_type();
-            querying_exact_match();
-            querying_range();
-            querying_range_with_terms();
-            querying_pagination();
+            var funcs = [
+                invalid_field_names,
+                incorrect_data_type,
+                querying_exact_match,
+                querying_range,
+                querying_range_with_terms,
+                querying_pagination
+            ];
+            async.parallel(funcs, function (err, rslts) {
+                if (err) {
+                    logger.error("[DevUsing2i] err: '%s'", err);
+                }
+                client.stop(function (err, c) {
+                    logger.debug("[DevUsing2i] client stopped");
+                    done_cb();
+                });
+            });
         });
     }
 
-    function querying_pagination() {
+    function querying_pagination(async_cb) {
 
         function do_query(continuation) {
             var binIdxCmdBuilder = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
@@ -153,19 +167,21 @@ function DevUsing2i(done) {
         var query_keys = [];
         function pagination_cb(err, rslt) {
             if (err) {
-                logger.error("[DevUsing2i] query_cb err: '%s'", err);
+                logger.error("[DevUsing2i] pagination_cb err: '%s'", err);
                 return;
             }
 
             if (rslt.done) {
                 query_keys.forEach(function (key) {
-                    logger.info("[DevUsing2i] 2i query key: '%s'", key);
+                    logger.info("[DevUsing2i] pagination_cb 2i query key: '%s'", key);
                 });
                 query_keys = [];
 
                 if (rslt.continuation) {
                     do_query(rslt.continuation);
                 }
+
+                async_cb();
             }
 
             if (rslt.values.length > 0) {
@@ -179,70 +195,116 @@ function DevUsing2i(done) {
         do_query();
     }
 
-    function querying_exact_match() {
-        var binIdxCmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
-            .withBucketType('indexes')
-            .withBucket('people')
-            .withIndexName('field1_bin')
-            .withIndexKey('val1')
-            .withCallback(query_cb)
-            .build();
-        client.execute(binIdxCmd);
+    function querying_exact_match(async_cb) {
+        var f1 = function (acb) {
+            var binIdxCmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
+                .withBucketType('indexes')
+                .withBucket('people')
+                .withIndexName('field1_bin')
+                .withIndexKey('val1')
+                .withCallback(function (err, rslt) {
+                    query_cb(err, rslt);
+                    if (!rslt || rslt.done) {
+                        acb();
+                    }
+                }).build();
+            client.execute(binIdxCmd);
+        };
 
-        var intIdxCmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
-            .withBucketType('indexes')
-            .withBucket('people')
-            .withIndexName('field2_int')
-            .withIndexKey(1001)
-            .withCallback(query_cb)
-            .build();
-        client.execute(intIdxCmd);
+        var f2 = function (acb) {
+            var intIdxCmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
+                .withBucketType('indexes')
+                .withBucket('people')
+                .withIndexName('field2_int')
+                .withIndexKey(1001)
+                .withCallback(function (err, rslt) {
+                    query_cb(err, rslt);
+                    if (!rslt || rslt.done) {
+                        acb();
+                    }
+                }).build();
+            client.execute(intIdxCmd);
+        };
+
+        async.parallel([f1, f2], function (err, rslts) {
+            if (err) {
+                logger.error("[DevUsing2i] querying_exact_match err: '%s'", err);
+            }
+            async_cb();
+        });
     }
 
-    function querying_range_with_terms() {
+    function querying_range_with_terms(async_cb) {
         var binIdxCmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
             .withBucketType('indexes')
             .withBucket('tweets')
             .withIndexName('hashtags_bin')
             .withRange('rock', 'rocl')
             .withReturnKeyAndIndex(true)
-            .withCallback(query_cb)
-            .build();
+            .withCallback(function (err, rslt) {
+                query_cb(err, rslt);
+                if (!rslt || rslt.done) {
+                    async_cb();
+                }
+            }).build();
         client.execute(binIdxCmd);
     }   
 
-    function querying_range() {
-        var binIdxCmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
-            .withBucketType('indexes')
-            .withBucket('people')
-            .withIndexName('field1_bin')
-            .withRange('val2', 'val4')
-            .withCallback(query_cb)
-            .build();
-        client.execute(binIdxCmd);
+    function querying_range(async_cb) {
+        var f1 = function (acb) {
+            var binIdxCmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
+                .withBucketType('indexes')
+                .withBucket('people')
+                .withIndexName('field1_bin')
+                .withRange('val2', 'val4')
+                .withCallback(function (err, rslt) {
+                    query_cb(err, rslt);
+                    if (!rslt || rslt.done) {
+                        acb();
+                    }
+                }).build();
+            client.execute(binIdxCmd);
+        };
 
-        var intIdxCmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
-            .withBucketType('indexes')
-            .withBucket('people')
-            .withIndexName('field2_int')
-            .withRange(1002, 1004)
-            .withCallback(query_cb)
-            .build();
-        client.execute(intIdxCmd);
+        var f2 = function (acb) {
+            var intIdxCmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
+                .withBucketType('indexes')
+                .withBucket('people')
+                .withIndexName('field2_int')
+                .withRange(1002, 1004)
+                .withCallback(function (err, rslt) {
+                    query_cb(err, rslt);
+                    if (!rslt || rslt.done) {
+                        acb();
+                    }
+                }).build();
+            client.execute(intIdxCmd);
+        };
+
+        async.parallel([f1, f2], function (err, rslts) {
+            if (err) {
+                logger.error("[DevUsing2i] querying_range err: '%s'", err);
+            }
+            async_cb();
+        });
     }
 
-    function invalid_field_names() {
+    function invalid_field_names(async_cb) {
         var cmd = new Riak.Commands.KV.SecondaryIndexQuery.Builder()
             .withBucketType('indexes')
             .withBucket('people')
             .withIndexName('field2_foo')
             .withIndexKey('jsmith123')
-            .withCallback(query_cb)
-            .build();
+            .withCallback(function (err, rslt) {
+                query_cb(err, rslt);
+                if (!rslt || rslt.done) {
+                    async_cb();
+                }
+            }).build();
         client.execute(cmd);
     }
 
-    function incorrect_data_type() {
+    function incorrect_data_type(async_cb) {
         var riakObj = new Riak.Commands.KV.RiakObject();
         riakObj.setContentType('text/plain');
         riakObj.setBucketType('indexes');
@@ -252,10 +314,12 @@ function DevUsing2i(done) {
         try {
             client.storeValue({ value: riakObj }, function (err, rslt) {
                 logger.error("[DevUsing2i] incorrect_data_type err: '%s'", err);
+                async_cb();
             });
         } catch (e) {
             logger.error("[DevUsing2i] incorrect_data_type err: '%s'", e);
         }
+        async_cb();
     }
 
     var query_keys = [];
@@ -267,7 +331,7 @@ function DevUsing2i(done) {
 
         if (rslt.done) {
             query_keys.forEach(function (key) {
-                logger.info("[DevUsing2i] 2i query key: '%s'", key);
+                logger.info("[DevUsing2i] query_cb 2i query key: '%s'", key);
             });
             query_keys = [];
         }
@@ -282,4 +346,3 @@ function DevUsing2i(done) {
 }
 
 module.exports = DevUsing2i;
-

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+if [[ ! -x $RIAK_ADMIN ]]
+then
+    echo '[ERROR] please set RIAK_ADMIN to the full path to the riak-admin executable.' 1>&2
+    exit 1
+fi
+
+if [[ $INIT_CMS ]]
+then
+    $RIAK_ADMIN bucket-type create cms '{"props":{"datatype":"map","search_index":"blog_posts"}}'
+    $RIAK_ADMIN bucket-type activate cms
+fi
+
+$RIAK_ADMIN bucket-type create github
+$RIAK_ADMIN bucket-type activate github
+
+$RIAK_ADMIN bucket-type create users
+$RIAK_ADMIN bucket-type activate users
+
+$RIAK_ADMIN bucket-type create cars
+$RIAK_ADMIN bucket-type activate cars
+
+$RIAK_ADMIN bucket-type create animals
+$RIAK_ADMIN bucket-type activate animals
+
+$RIAK_ADMIN bucket-type create sports
+$RIAK_ADMIN bucket-type activate sports
+
+$RIAK_ADMIN bucket-type create quotes
+$RIAK_ADMIN bucket-type activate quotes
+
+$RIAK_ADMIN bucket-type create n_val_of_5 '{"props":{"n_val":5}}'
+$RIAK_ADMIN bucket-type activate n_val_of_5
+
+$RIAK_ADMIN bucket-type create no_siblings '{"props":{"allow_mult":false}}'
+$RIAK_ADMIN bucket-type activate no_siblings
+
+$RIAK_ADMIN bucket-type create siblings '{"props":{"allow_mult":true}}'
+$RIAK_ADMIN bucket-type activate siblings
+
+$RIAK_ADMIN bucket-type create siblings_allowed '{"props":{"allow_mult":true}}'
+$RIAK_ADMIN bucket-type activate siblings_allowed
+
+$RIAK_ADMIN bucket-type create indexes '{"props":{"backend":"leveldb_backend"}}'
+$RIAK_ADMIN bucket-type activate indexes
+
+$RIAK_ADMIN bucket-type create maps '{"props":{"datatype":"map"}}'
+$RIAK_ADMIN bucket-type activate maps
+
+$RIAK_ADMIN bucket-type create sets '{"props":{"datatype":"set"}}'
+$RIAK_ADMIN bucket-type activate sets
+
+$RIAK_ADMIN bucket-type create counters '{"props":{"datatype":"counter"}}'
+$RIAK_ADMIN bucket-type activate counters
