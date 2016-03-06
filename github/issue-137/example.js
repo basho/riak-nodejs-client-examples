@@ -1,5 +1,6 @@
 'use strict';
 
+var async = require('async');
 var logger = require('winston');
 var Riak = require('basho-riak-client');
 
@@ -23,14 +24,35 @@ function GitHubIssue137(done) {
             logger.error('[GitHubIssue137] err: %s', err);
         }
 
+        var batch_size = 64;
         var finalCount = Math.pow(2, 20);
 
-        var storeIntervalMs = 16;
+        var storeIntervalMs = 2;
         var storeValueInterval = null;
-        var fetchIntervalMs = 16;
+        var fetchIntervalMs = 2;
+        var fetchValueInterval = null;
 
         var key = 1;
         var storeCount = 0;
+        function makeStoreValueFunc() {
+            return function(acb) {
+                var obj = new Riak.Commands.KV.RiakObject();
+                obj.setContentType('text/plain');
+                obj.setValue('github-issue-137');
+                var o = {
+                    bucketType: 'default',
+                    bucket: 'gh-137',
+                    key: key.toString(),
+                    value: obj
+                };
+                key++;
+                client.storeValue(o, function (err, rslt) {
+                    storeCount++;
+                    acb(err, rslt);
+                });
+            };
+        };
+
         function storeValues() {
             if (storeCount > finalCount) {
                 logger.info('[GitHubIssue137] all values stored!');
@@ -39,27 +61,41 @@ function GitHubIssue137(done) {
                 }
                 return;
             }
-            var obj = new Riak.Commands.KV.RiakObject();
-            obj.setContentType('text/plain');
-            obj.setValue('github-issue-137');
-            var o = {
-                bucketType: 'default',
-                bucket: 'gh-137',
-                key: key.toString(),
-                value: obj
-            };
-            key++;
-            client.storeValue(o, function (err, rslt) {
-                storeCount++;
+            var storeFuncs = [];
+            for (var i = 0; i < batch_size; i++) {
+                storeFuncs.push(makeStoreValueFunc());
+            }
+            async.parallel(storeFuncs, function (err, rslts) {
                 if (err) {
-                    logger.info('[GitHubIssue137] storeValue err:', err);
+                    logger.info('[GitHubIssue137] async storeValue err:', err);
+                }
+                if (storeIntervalMs === 0) {
+                    setImmediate(storeValues);
                 }
             });
         };
 
         var fetchCount = 0;
+        function makeFetchValueFunc() {
+            return function(acb) {
+                var k = Math.floor(Math.random() * storeCount) + 1;
+                // Do fetch of random key
+                var o = {
+                    bucketType: 'default',
+                    bucket: 'gh-137',
+                    key: k.toString()
+                };
+                client.fetchValue(o, function (err, rslt) {
+                    fetchCount++;
+                    if (rslt && rslt.isNotFound) {
+                        logger.error('[GitHubIssue137] key not found:', k);
+                    }
+                    acb(err, rslt);
+                });
+            };
+        };
+
         function fetchValues() {
-            fetchCount++;
             if (fetchCount > finalCount) {
                 stopClient();
             }
@@ -67,38 +103,41 @@ function GitHubIssue137(done) {
                 logger.info('[GitHubIssue137] fetchCount:', fetchCount);
             }
 
-            var k = Math.floor(Math.random() * storeCount) + 1;
-            // Do fetch of random key
-            var o = {
-                bucketType: 'default',
-                bucket: 'gh-137',
-                key: k.toString()
-            };
-            client.fetchValue(o, function (err, rslt) {
+            var fetchFuncs = [];
+            for (var i = 0; i < batch_size; i++) {
+                fetchFuncs.push(makeFetchValueFunc());
+            }
+            async.parallel(fetchFuncs, function (err, rslts) {
                 if (err) {
-                    logger.error('[GitHubIssue137] fv err: %s', err);
+                    logger.info('[GitHubIssue137] async fetchValue err:', err);
                 }
-
-                if (!rslt) {
-                    logger.error('[GitHubIssue137] no fv rslt!');
-                    return
-                }
-                if (rslt.isNotFound) {
-                    logger.error('[GitHubIssue137] key not found:', k);
+                if (fetchIntervalMs === 0) {
+                    setImmediate(fetchValues);
                 }
             });
         };
 
         logger.debug('[GitHubIssue137] starting store/fetch');
-        storeValueInterval = setInterval(storeValues, storeIntervalMs);
-        var intervals = [
-            storeValueInterval,
-            setInterval(fetchValues, fetchIntervalMs),
-        ];
+
+        if (storeIntervalMs === 0) {
+            setImmediate(storeValues);
+        } else {
+            storeValueInterval = setInterval(storeValues, storeIntervalMs);
+        }
+
+        if (fetchIntervalMs === 0) {
+            setImmediate(fetchValues);
+        } else {
+            fetchValueInterval = setInterval(fetchValues, fetchIntervalMs);
+        }
+
+        var intervals = [ storeValueInterval, fetchValueInterval ];
 
         function stopClient() {
             intervals.forEach(function (i) {
-                clearInterval(i);
+                if (i) {
+                    clearInterval(i);
+                }
             });
             client.stop(function (err) {
                 if (err) {
