@@ -17,10 +17,10 @@ function GitHubIssue137(done) {
         'riak-test:10027',
         'riak-test:10037',
         'riak-test:10047',
-        'riak-test:10057',
-        'riak-test:10067',
-        'riak-test:10077',
-        'riak-test:10087'
+        'riak-test:10057' //,
+        // 'riak-test:10067',
+        // 'riak-test:10077',
+        // 'riak-test:10087'
     ];
 
     var c = new Riak.Client(nodes, function (err, client) {
