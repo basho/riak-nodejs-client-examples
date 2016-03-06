@@ -67,7 +67,7 @@ function GitHubIssue137(done) {
             }
             async.parallel(storeFuncs, function (err, rslts) {
                 if (err) {
-                    logger.info('[GitHubIssue137] async storeValue err:', err);
+                    logger.error('[GitHubIssue137] async storeValue err:', err);
                 }
                 if (storeIntervalMs === 0) {
                     setImmediate(storeValues);
@@ -109,7 +109,7 @@ function GitHubIssue137(done) {
             }
             async.parallel(fetchFuncs, function (err, rslts) {
                 if (err) {
-                    logger.info('[GitHubIssue137] async fetchValue err:', err);
+                    logger.error('[GitHubIssue137] async fetchValue err:', err);
                 }
                 if (fetchIntervalMs === 0) {
                     setImmediate(fetchValues);
