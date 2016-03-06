@@ -17,6 +17,10 @@ function GitHubIssue137(done) {
         'riak-test:10027',
         'riak-test:10037',
         'riak-test:10047',
+        'riak-test:10057',
+        'riak-test:10067',
+        'riak-test:10077',
+        'riak-test:10087'
     ];
 
     var c = new Riak.Client(nodes, function (err, client) {
@@ -27,9 +31,9 @@ function GitHubIssue137(done) {
         var batch_size = 64;
         var finalCount = Math.pow(2, 20);
 
-        var storeIntervalMs = 2;
+        var storeIntervalMs = 10;
         var storeValueInterval = null;
-        var fetchIntervalMs = 2;
+        var fetchIntervalMs = 10;
         var fetchValueInterval = null;
 
         var key = 1;
@@ -83,7 +87,8 @@ function GitHubIssue137(done) {
                 var o = {
                     bucketType: 'default',
                     bucket: 'gh-137',
-                    key: k.toString()
+                    key: k.toString(),
+                    r: 1
                 };
                 client.fetchValue(o, function (err, rslt) {
                     fetchCount++;
