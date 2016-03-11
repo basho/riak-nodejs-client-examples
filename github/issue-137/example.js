@@ -87,9 +87,10 @@ function GitHubIssue137(done) {
                 var o = {
                     bucketType: 'default',
                     bucket: 'gh-137',
-                    key: k.toString(),
-                    r: 1
+                    key: k.toString()
                 };
+                // NB: this has an interesting effect
+                // o.r = 1;
                 client.fetchValue(o, function (err, rslt) {
                     fetchCount++;
                     if (rslt && rslt.isNotFound) {
