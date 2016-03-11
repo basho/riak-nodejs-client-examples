@@ -57,7 +57,7 @@
       "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-0.3.0.tgz"
     },
     "basho-riak-client": {
-      "version": "2.1.2-beta2",
+      "version": "2.1.2-beta4",
       "dependencies": {
         "abbrev": {
           "version": "1.0.7",
