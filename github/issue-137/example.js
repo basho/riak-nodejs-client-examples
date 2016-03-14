@@ -12,15 +12,21 @@ function GitHubIssue137(done) {
         process.exit(1);
 	});
 
+    /*
+    var nodes = [
+        'riak-test:10117',
+        'riak-test:10127',
+        'riak-test:10137',
+        'riak-test:10147',
+        'riak-test:10157'
+    ];
+    */
     var nodes = [
         'riak-test:10017',
         'riak-test:10027',
         'riak-test:10037',
         'riak-test:10047',
-        'riak-test:10057' //,
-        // 'riak-test:10067',
-        // 'riak-test:10077',
-        // 'riak-test:10087'
+        'riak-test:10057'
     ];
 
     var c = new Riak.Client(nodes, function (err, client) {
@@ -55,7 +61,7 @@ function GitHubIssue137(done) {
                     acb(err, rslt);
                 });
             };
-        };
+        }
 
         function storeValues() {
             if (storeCount > finalCount) {
@@ -77,11 +83,11 @@ function GitHubIssue137(done) {
                     setImmediate(storeValues);
                 }
             });
-        };
+        }
 
         var fetchCount = 0;
         function makeFetchValueFunc() {
-            return function(acb) {
+            return function(async_cb) {
                 var k = Math.floor(Math.random() * storeCount) + 1;
                 // Do fetch of random key
                 var o = {
@@ -89,17 +95,35 @@ function GitHubIssue137(done) {
                     bucket: 'gh-137',
                     key: k.toString()
                 };
-                // NB: this has an interesting effect
-                // o.r = 1;
-                client.fetchValue(o, function (err, rslt) {
-                    fetchCount++;
-                    if (rslt && rslt.isNotFound) {
-                        logger.error('[GitHubIssue137] key not found:', k);
-                    }
-                    acb(err, rslt);
-                });
+                var tries = 0;
+                var fv = function(acb) {
+                    // NB: this has an interesting effect
+                    // o.r = 1;
+                    client.fetchValue(o, function (err, rslt) {
+                        if (!rslt) {
+                            var rslt_err = new Error('[GitHubIssue137] no result for fetch of key:', k);
+                            acb(rslt_err, null);
+                            return;
+                        }
+
+                        if (rslt.isNotFound) {
+                            tries++;
+                            if (tries > 3) {
+                                var retry_err = new Error('[GitHubIssue137] key not found after 3 tries:', k);
+                                acb(retry_err, null);
+                            } else {
+                                setTimeout(fv.bind(this, acb), fetchIntervalMs * tries);
+                            }
+                            return;
+                        }
+
+                        fetchCount++;
+                        acb(err, rslt);
+                    });
+                };
+                fv(async_cb);
             };
-        };
+        }
 
         function fetchValues() {
             if (fetchCount > finalCount) {
@@ -121,7 +145,7 @@ function GitHubIssue137(done) {
                     setImmediate(fetchValues);
                 }
             });
-        };
+        }
 
         logger.debug('[GitHubIssue137] starting store/fetch');
 
@@ -151,7 +175,7 @@ function GitHubIssue137(done) {
                 }
                 done();
             });
-        };
+        }
 
         client.ping(function (err, rslt) {
             if (rslt) {
