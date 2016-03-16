@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/basho/riak-nodejs-client-examples",
   "dependencies": {
-    "async": "^1.5.0",
+    "async": "^1.5.2",
     "basho-riak-client": "*",
     "clone": "^1.0.2",
     "minimist": "^1.2.0",
