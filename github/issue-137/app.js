@@ -54,12 +54,12 @@ c = new Riak.Client(nodes, function (err, client) {
         logger.error('[GitHubIssue137] err: %s', err);
     }
 
-    var batch_size = 2;
+    var batch_size = 64;
     var finalCount = Math.pow(2, 20);
 
-    var storeIntervalMs = 1000;
+    var storeIntervalMs = 10;
     var storeValueInterval = null;
-    var fetchIntervalMs = 1000;
+    var fetchIntervalMs = 10;
     var fetchValueInterval = null;
 
     var key = 1;
