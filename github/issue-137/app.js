@@ -33,7 +33,6 @@ var nodes = [
     'riak-test:10147',
     'riak-test:10157'
 ];
-*/
 var nodes = [
     'riak-test:10017',
     'riak-test:10027',
@@ -41,18 +40,26 @@ var nodes = [
     'riak-test:10047',
     'riak-test:10057'
 ];
+*/
+var nodes = [
+    'riak-test:10117',
+    'riak-test:10117',
+    'riak-test:10117',
+    'riak-test:10117',
+    'riak-test:10117',
+];
 
 c = new Riak.Client(nodes, function (err, client) {
     if (err) {
         logger.error('[GitHubIssue137] err: %s', err);
     }
 
-    var batch_size = 16;
+    var batch_size = 2;
     var finalCount = Math.pow(2, 20);
 
-    var storeIntervalMs = 250;
+    var storeIntervalMs = 1000;
     var storeValueInterval = null;
-    var fetchIntervalMs = 250;
+    var fetchIntervalMs = 1000;
     var fetchValueInterval = null;
 
     var key = 1;
@@ -114,7 +121,10 @@ c = new Riak.Client(nodes, function (err, client) {
                 // o.r = 1;
                 client.fetchValue(o, function (err, rslt) {
                     if (!rslt) {
-                        var rslt_err = new Error('[GitHubIssue137] no result for fetch of key:', k);
+                        var rslt_err = new Error('[GitHubIssue137] no result for fetch of key: ' + k.toString());
+                        if (err) {
+                            rslt_err = err;
+                        }
                         acb(rslt_err, null);
                         return;
                     }
@@ -140,6 +150,7 @@ c = new Riak.Client(nodes, function (err, client) {
 
     function fetchValues() {
         if (fetchCount > finalCount) {
+            logger.info('[GitHubIssue137] all values fetched!');
             stopClient();
         }
         if (fetchCount % 1024 === 0) {
