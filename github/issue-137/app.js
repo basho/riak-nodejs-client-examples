@@ -41,15 +41,19 @@ var nodes = [
     'riak-test:10057'
 ];
 */
-var nodes = [
-    'riak-test:10117',
-    'riak-test:10117',
-    'riak-test:10117',
-    'riak-test:10117',
+var nodeAddresses = [
     'riak-test:10117',
 ];
 
-c = new Riak.Client(nodes, function (err, client) {
+var nodeBuilder = new Riak.Node.Builder();
+var nodeTemplate = nodeBuilder.withExternalLoadBalancer(true);
+var nodes = Riak.Node.buildNodes(nodeAddresses, nodeTemplate);
+
+var cb = new Riak.Cluster.Builder();
+cb.withRiakNodes(nodes);
+var cluster = cb.build();
+
+c = new Riak.Client(cluster, function (err, client) {
     if (err) {
         logger.error('[GitHubIssue137] err: %s', err);
     }
@@ -57,9 +61,9 @@ c = new Riak.Client(nodes, function (err, client) {
     var batch_size = 64;
     var finalCount = Math.pow(2, 20);
 
-    var storeIntervalMs = 10;
+    var storeIntervalMs = 250;
     var storeValueInterval = null;
-    var fetchIntervalMs = 10;
+    var fetchIntervalMs = 250;
     var fetchValueInterval = null;
 
     var key = 1;
